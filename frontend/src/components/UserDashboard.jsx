@@ -1,136 +1,87 @@
 import { useState } from 'react';
+import WasteForm from './WasteForm';
 import { LayoutGrid, Leaf, Award, ArrowRight, History, Recycle } from 'lucide-react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
-import WasteForm from './WasteForm';
 
-const UserDashboard = ({ onOpenHistory }) => {
-    const { user } = useAuth();
+const UserDashboard = () => {
     const [view, setView] = useState('home'); // 'home' | 'log'
 
     const handleEntryAdded = () => {
         setView('home');
+        // Ideally show a success toast here
     };
 
-    const impactPoints = user?.impact_points || 0;
-    const ecoLevel = user?.eco_level || 1;
-
-    // Convert numeric level to Roman
-    const romanLevels = ['I', 'II', 'III', 'IV', 'V', 'VI'];
-    const displayLevel = romanLevels[ecoLevel - 1] || ecoLevel;
-
     return (
-        <div className="space-y-12 animate-fadeIn max-w-5xl mx-auto pb-24 px-4">
+        <div className="space-y-6 pb-20 animate-fadeIn">
             {view === 'home' ? (
-                <div className="space-y-12">
-                    {/* Hero Section */}
-                    <div className="relative overflow-hidden bg-slate-950 rounded-[3rem] p-12 text-white shadow-2xl shadow-slate-200/50 group animate-slideUp">
-                        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 -mr-20 -mt-20 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all duration-1000"></div>
-                        <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/10 -ml-10 -mb-10 rounded-full blur-2xl"></div>
-
-                        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-12">
-                            <div className="text-center md:text-left flex-1">
-                                <span className="inline-block px-4 py-1.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-full mb-6">Campus Steward</span>
-                                <h2 className="text-5xl font-black mb-6 tracking-tighter leading-[1.1]">Sustainable <br /><span className="text-emerald-500 text-gradient">Campus Flow.</span></h2>
-                                <p className="text-slate-400 text-lg opacity-90 max-w-md font-medium leading-relaxed">
-                                    Your digital interface for a cleaner campus. Log. Track. Inspire.
-                                </p>
+                <>
+                    {/* Welcome Section */}
+                    <div className="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200">
+                        <h2 className="text-2xl font-bold mb-2">Welcome back, Student! 👋</h2>
+                        <p className="opacity-90 max-w-lg text-emerald-50">Ready to make the campus greener? Log your waste disposal and earn points for your hostel block.</p>
+                        <div className="mt-6 flex flex-wrap gap-4">
+                            <div className="bg-white/10 backdrop-blur-md rounded-lg px-4 py-2 flex items-center gap-2 border border-white/20">
+                                <Award className="text-amber-300" size={20} />
+                                <span className="font-bold">1,240 pts</span>
                             </div>
-
-                            <div className="flex flex-col gap-6 w-full md:w-80">
-                                <div className="bg-white/5 backdrop-blur-2xl rounded-3xl p-6 border border-white/10 shadow-2xl flex items-center gap-5 hover:bg-white/10 transition-all stagger-1">
-                                    <div className="p-3.5 bg-emerald-500 text-white rounded-2xl shadow-xl shadow-emerald-500/20">
-                                        <Award size={24} />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Impact Points</p>
-                                        <h4 className="text-3xl font-black tabular-nums">{impactPoints.toLocaleString()}</h4>
-                                    </div>
-                                </div>
-                                <div className="bg-white/5 backdrop-blur-2xl rounded-3xl p-6 border border-white/10 shadow-2xl flex items-center gap-5 hover:bg-white/10 transition-all stagger-2">
-                                    <div className="p-3.5 bg-blue-500 text-white rounded-2xl shadow-xl shadow-blue-500/20">
-                                        <Recycle size={24} />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Eco Level</p>
-                                        <h4 className="text-3xl font-black tabular-nums">{displayLevel}</h4>
-                                    </div>
-                                </div>
+                            <div className="bg-white/10 backdrop-blur-md rounded-lg px-4 py-2 flex items-center gap-2 border border-white/20">
+                                <Recycle className="text-emerald-300" size={20} />
+                                <span className="font-bold">45.2 kg Recycled</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Action Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Quick Actions */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <button
                             onClick={() => setView('log')}
-                            className="group relative bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 text-left overflow-hidden stagger-1"
+                            className="group bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-500 transition-all text-left flex items-start gap-4"
                         >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 -mr-16 -mt-16 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
-                            <div className="relative z-10">
-                                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-emerald-600 group-hover:text-white transition-all transform group-hover:rotate-6 shadow-sm shadow-emerald-100">
-                                    <Leaf size={32} />
-                                </div>
-                                <h3 className="font-black text-3xl text-slate-900 tracking-tight mb-3">Report Collection</h3>
-                                <p className="text-slate-500 font-medium leading-relaxed max-w-sm">Help us orchestrate a cleaner campus. Log waste collection in seconds.</p>
-                                <div className="mt-8 flex items-center gap-2 text-emerald-600 font-black uppercase tracking-widest text-[10px]">
-                                    Initialize Reporting <ArrowRight size={16} className="group-hover:translate-x-3 transition-transform" />
-                                </div>
+                            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                <Leaf size={24} />
                             </div>
+                            <div>
+                                <h3 className="font-bold text-lg text-slate-900 group-hover:text-emerald-700">Log Waste</h3>
+                                <p className="text-sm text-slate-500 mt-1">Upload stats for recycling or disposal</p>
+                            </div>
+                            <ArrowRight className="ml-auto text-slate-300 group-hover:text-emerald-500" />
                         </button>
 
-                        <button
-                            onClick={onOpenHistory}
-                            className="bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative overflow-hidden flex flex-col stagger-2 text-left group"
-                        >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 -mr-16 -mt-16 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
-                            <div className="relative z-10">
-                                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all transform group-hover:-rotate-6">
-                                    <History size={32} />
+                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm opacity-60">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-slate-100 text-slate-500 rounded-lg">
+                                    <History size={24} />
                                 </div>
-                                <h3 className="font-black text-3xl text-slate-900 tracking-tight mb-3">Personal Ledger</h3>
-                                <p className="text-slate-500 font-medium leading-relaxed max-w-sm">Audit your historical contributions and climate ROI.</p>
-                                <div className="mt-8 flex items-center gap-2 text-blue-600 font-black uppercase tracking-widest text-[10px]">
-                                    Access Archives <ArrowRight size={16} className="group-hover:translate-x-3 transition-transform" />
+                                <div>
+                                    <h3 className="font-bold text-lg text-slate-900">My History</h3>
+                                    <p className="text-sm text-slate-500 mt-1">View past submissions</p>
                                 </div>
                             </div>
-                        </button>
+                        </div>
                     </div>
 
-                    {/* Impact Stats */}
-                    <div>
-                        <div className="flex items-end gap-3 mb-8">
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Environmental Intelligence</h3>
-                            <span className="h-px flex-1 bg-slate-200 mb-3 rounded-full opacity-50"></span>
+                    {/* Impact Cards */}
+                    <h3 className="font-bold text-slate-800 text-lg mt-4">Your Impact</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white p-4 rounded-xl border border-slate-200 text-center">
+                            <p className="text-3xl font-bold text-emerald-600">12</p>
+                            <p className="text-xs text-slate-500 font-medium uppercase mt-1">Trees Saved</p>
                         </div>
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                            {[
-                                { label: 'Trees Protected', val: '12', icon: '🌳', color: 'text-emerald-500', bg: 'bg-emerald-50' },
-                                { label: 'Carbon Offset', val: '8.4kg', icon: '☁️', color: 'text-blue-500', bg: 'bg-blue-50' },
-                                { label: 'Energy Conserved', val: '42kWh', icon: '⚡', color: 'text-indigo-500', bg: 'bg-indigo-50' },
-                                { label: 'Water Purified', val: '150L', icon: '💧', color: 'text-sky-500', bg: 'bg-sky-50' },
-                            ].map((stat, i) => (
-                                <div key={i} className="bg-white p-8 rounded-[2rem] border border-slate-200/60 hover:border-slate-300 shadow-sm hover:shadow-2xl transition-all text-center group flex flex-col items-center stagger-3">
-                                    <div className={`w-14 h-14 ${stat.bg} rounded-2xl flex items-center justify-center text-2xl mb-4 shadow-inner transform group-hover:-translate-y-1 transition-transform`}>{stat.icon}</div>
-                                    <p className={`text-4xl font-black ${stat.color} mb-2 tracking-tighter tabular-nums`}>{stat.val}</p>
-                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{stat.label}</p>
-                                </div>
-                            ))}
+                        <div className="bg-white p-4 rounded-xl border border-slate-200 text-center">
+                            <p className="text-3xl font-bold text-blue-600">8.4</p>
+                            <p className="text-xs text-slate-500 font-medium uppercase mt-1">KG CO2 Offset</p>
                         </div>
                     </div>
-                </div>
+                </>
             ) : (
-                <div className="animate-slideUp max-w-2xl mx-auto">
+                <div className="animate-slideUp">
                     <button
                         onClick={() => setView('home')}
-                        className="mb-10 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-3 transition-all shadow-xl shadow-slate-200 active:scale-95"
+                        className="mb-4 text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1"
                     >
-                        <ArrowRight size={16} className="rotate-180" /> Operational Context
+                        Start Over
                     </button>
-                    <div className="bg-white rounded-[3rem] border border-slate-200/60 shadow-2xl p-4 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 -mr-16 -mt-16 rounded-full"></div>
-                        <WasteForm onEntryAdded={handleEntryAdded} />
-                    </div>
+                    <WasteForm onEntryAdded={handleEntryAdded} />
                 </div>
             )}
         </div>

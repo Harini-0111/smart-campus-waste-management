@@ -1,349 +1,270 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
-    PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
-    BarChart, Bar, XAxis, YAxis, CartesianGrid
-} from 'recharts';
-import {
-    TrendingUp, Leaf, Clock, ArrowRight,
-    Activity, CircleCheck, Image as ImageIcon, ShieldAlert
+    TrendingUp, TrendingDown, AlertTriangle, Leaf, Clock, ArrowRight,
+    BarChart3, Activity, CheckCircle2, MoreHorizontal, Image as ImageIcon
 } from 'lucide-react';
-import { API_URL } from '../config';
-import { DashboardSkeleton } from './SkeletonLoader';
-import { useNotification } from './NotificationSystem';
 
 const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
-    const { notify } = useNotification();
-
-    const [data, setData] = useState({
-        total_today: 0,
-        by_type: [],
-        by_location: [],
-        recent: []
-    });
-
-    // SAFE DEFAULT TO PREVENT CRASH
-    const [predictions, setPredictions] = useState({
-        prediction: { prediction: '--' }
-    });
-
+    const [data, setData] = useState({ total_today: 0, by_type: [], by_location: [], recent: [] });
     const [loading, setLoading] = useState(true);
+
+    // Simulated metrics
+    const segregationScore = 94;
+    const yesterdayTotal = 120.5;
+    const growth = data.total_today > 0 ? ((data.total_today - yesterdayTotal) / yesterdayTotal * 100) : 0;
+    const growthIsPositive = growth >= 0;
 
     const fetchData = async () => {
         try {
-            const headers = {
-                Authorization: `Bearer ${localStorage.getItem('token')}`
-            };
-
-            const [dashboardRes, predictionRes] = await Promise.all([
-                axios.get(`${API_URL}/dashboard`, { headers }),
-                axios.get(`${API_URL}/analytics/prediction`, { headers })
-            ]);
-
-            setData(dashboardRes?.data || {
-                total_today: 0,
-                by_type: [],
-                by_location: [],
-                recent: []
-            });
-
-            setPredictions(predictionRes?.data || {
-                prediction: { prediction: '--' }
-            });
-
-            const hasHazardous = (dashboardRes?.data?.recent || [])
-                .some(r => r.waste_type === 'Hazardous');
-
-            if (hasHazardous) {
-                notify("Critical: Hazardous Waste Breach Detected", "critical");
-            }
-
-            setLoading(false);
+            const res = await axios.get('http://localhost:3001/api/v1/dashboard');
+            setTimeout(() => {
+                setData(res.data);
+                setLoading(false);
+            }, 600);
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
-            notify("Live data temporarily unavailable", "warning");
             setLoading(false);
         }
     };
 
-    // REAL-TIME POLLING ADDED HERE
     useEffect(() => {
         setLoading(true);
         fetchData();
-
-        const interval = setInterval(() => {
-            fetchData();
-        }, 10000); // every 10 seconds
-
-        return () => clearInterval(interval);
     }, [refreshTrigger]);
 
     const COLORS = {
-        Wet: '#10B981',
-        Dry: '#3B82F6',
-        Recyclable: '#F59E0B',
-        'E-waste': '#8B5CF6',
-        Hazardous: '#EF4444'
+        Wet: '#10B981', // Emerald
+        Dry: '#3B82F6', // Blue
+        Recyclable: '#F59E0B', // Amber
+        'E-waste': '#8B5CF6', // Purple
+        Hazardous: '#EF4444' // Red
     };
 
     if (loading) return <DashboardSkeleton />;
 
-    const sortedLocations = [...(data.by_location || [])]
-        .sort((a, b) => b.value - a.value);
-
+    // Sort locations by highest waste
+    const sortedLocations = [...(data.by_location || [])].sort((a, b) => b.value - a.value);
     const maxLocValue = sortedLocations[0]?.value || 1;
 
     return (
-        <div className="space-y-10 pb-16 animate-fadeIn max-w-[1600px] mx-auto px-4 lg:px-8 mt-12">
+        <div className="space-y-6 pb-12 animate-fadeIn text-slate-800">
 
-            {/* HEADER ZONE: Pulse & Governance */}
-            <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
-                <div>
-                    <h2 className="text-5xl font-black tracking-tight text-slate-950 mb-2">
-                        Operational <span className="text-emerald-600">Foresight</span>
-                    </h2>
-                    <p className="text-slate-500 font-medium max-w-xl">
-                        Real-time environmental synchronization active across campus nodes.
-                        All metrics are cross-validated via internal governance protocol.
-                    </p>
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className="badge-emerald animate-pulse">
-                        ● System Synchronized
-                    </div>
-                    <button
-                        onClick={onViewHistory}
-                        className="btn-primary py-3 px-6 text-[10px] tracking-[0.2em]"
-                    >
-                        GOVERNANCE LOGS <ArrowRight size={14} />
-                    </button>
-                </div>
-            </div>
+            {/* Top Stats Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
-            {/* ZONE A: ENVIRONMENTAL PULSE (Real-time Metrics) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                {/* Managed Mass Card */}
-                <div className="premium-card p-10 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-8 text-emerald-100 group-hover:text-emerald-200 transition-colors">
-                        <Activity size={48} strokeWidth={1} />
-                    </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">
-                        Managed Mass (24h)
-                    </p>
-                    <div className="flex items-baseline gap-2">
-                        <h3 className="text-6xl font-black text-slate-950 tracking-tighter">
-                            {Number(data?.total_today || 0).toFixed(1)}
-                        </h3>
-                        <span className="text-xl font-bold text-slate-300">KG</span>
-                    </div>
-                    <div className="mt-6 flex items-center gap-2 text-[10px] font-black text-emerald-600 bg-emerald-50 w-fit px-3 py-1 rounded-full">
-                        <TrendingUp size={12} /> +2.4% vs AVG
-                    </div>
-                </div>
-
-                {/* Accuracy Card */}
-                <div className="premium-card p-10 relative group">
-                    <div className="absolute top-0 right-0 p-8 text-blue-100 group-hover:text-blue-200 transition-colors">
-                        <CircleCheck size={48} strokeWidth={1} />
-                    </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">
-                        Sort Accuracy
-                    </p>
-                    <div className="flex items-baseline gap-2">
-                        <h3 className="text-6xl font-black text-slate-950 tracking-tighter">
-                            94<span className="text-xl font-bold text-slate-300">%</span>
-                        </h3>
-                    </div>
-                    <div className="mt-6 flex items-center gap-2 text-[10px] font-black text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full uppercase tracking-widest">
-                        High Performance
-                    </div>
-                </div>
-
-                {/* Utilization Card */}
-                <div className="premium-card p-10 relative group">
-                    <div className="absolute top-0 right-0 p-8 text-slate-100 group-hover:text-slate-200 transition-colors">
-                        <ShieldAlert size={48} strokeWidth={1} />
-                    </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">
-                        Asset Capacity
-                    </p>
-                    <div className="flex items-baseline gap-2">
-                        <h3 className="text-6xl font-black text-slate-950 tracking-tighter">
-                            OPTIMAL
-                        </h3>
-                    </div>
-                    <div className="mt-6 flex items-center gap-2 text-[10px] font-black text-slate-600 bg-slate-50 w-fit px-3 py-1 rounded-full uppercase tracking-widest">
-                        Stability Confirmed
-                    </div>
-                </div>
-            </div>
-
-            {/* ZONE B: INTELLIGENT DECK (AI Predictions) */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-
-                {/* AI Prediction Hub */}
-                <div className="lg:col-span-3 insight-card p-10 group overflow-hidden relative">
-                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-intel-500/5 rounded-full blur-3xl" />
-                    <div className="flex justify-between items-start mb-10">
+                {/* Total Waste Card */}
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div className="flex justify-between items-start">
                         <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <Leaf className="text-intel-500" size={16} />
-                                <span className="text-[10px] font-black text-intel-500 uppercase tracking-widest">
-                                    Intelligence Foresight
-                                </span>
-                            </div>
-                            <h3 className="text-3xl font-black text-slate-900 tracking-tight">
-                                AI-Projected Volume
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Generated</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">{Number(data.total_today).toFixed(1)} <span className="text-base font-semibold text-slate-400">kg</span></h3>
+                        </div>
+                        <div className="p-2.5 bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-600 rounded-lg shadow-sm">
+                            <Activity size={20} />
+                        </div>
+                    </div>
+                    <div className="mt-4 flex items-center text-xs font-semibold">
+                        <span className={`flex items-center gap-1 ${growthIsPositive ? 'text-red-500' : 'text-emerald-600'}`}>
+                            {growthIsPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                            {Math.abs(growth).toFixed(1)}%
+                        </span>
+                        <span className="text-slate-400 ml-2">vs yesterday</span>
+                    </div>
+                </div>
+
+                {/* Segregation Score */}
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Segregation Quality</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">{segregationScore}%</h3>
+                        </div>
+                        <div className="p-2.5 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 rounded-lg shadow-sm">
+                            <CheckCircle2 size={20} />
+                        </div>
+                    </div>
+                    <div className="mt-4 w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-blue-500 h-1.5 rounded-full shadow-lg shadow-blue-500/30" style={{ width: `${segregationScore}%` }}></div>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2 font-medium">Top Performer: <strong>Science Block</strong></p>
+                </div>
+
+                {/* Dominant Type */}
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Top Category</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight truncate">
+                                {data.by_type.length > 0 ? data.by_type.sort((a, b) => b.value - a.value)[0]?.name : '-'}
                             </h3>
                         </div>
-                        <div className="p-4 bg-intel-600 text-white rounded-2xl shadow-xl shadow-intel-500/20 group-hover:scale-110 transition-transform pulse-ai">
-                            <TrendingUp size={24} />
+                        <div className="p-2.5 bg-gradient-to-br from-amber-50 to-amber-100 text-amber-600 rounded-lg shadow-sm">
+                            <BarChart3 size={20} />
                         </div>
                     </div>
-
-                    <div className="flex items-center gap-8">
-                        <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Next 12 Hours</p>
-                            <h4 className="text-5xl font-black text-slate-900">
-                                {predictions?.prediction?.prediction || '--'}
-                                <span className="text-lg font-bold text-slate-300 ml-2">KG</span>
-                            </h4>
-                        </div>
-                        <div className="h-20 w-[2px] bg-slate-100" />
-                        <div className="flex-1">
-                            <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                                "Our ML model identifies a gathering pattern in Central Hub.
-                                Recommended pre-emptive clearance at 16:30 IST."
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Risk Radar */}
-                <div className="lg:col-span-2 premium-card p-10 flex flex-col justify-between">
-                    <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                            Overflow Risk Radar
-                        </p>
-                        <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-8">
-                            Critical Zones
-                        </h3>
-                    </div>
-                    <div className="space-y-4">
-                        {sortedLocations.slice(0, 3).map((loc, i) => (
-                            <div key={i} className="flex flex-col gap-1">
-                                <div className="flex justify-between text-[11px] font-black">
-                                    <span className="text-slate-900 uppercase tracking-widest">{loc.name}</span>
-                                    <span className={loc.value > 80 ? 'text-red-500' : 'text-slate-400'}>
-                                        {((loc.value / maxLocValue) * 100).toFixed(0)}%
-                                    </span>
-                                </div>
-                                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full transition-all duration-1000 ease-out rounded-full ${loc.value > 80 ? 'bg-red-500' : 'bg-emerald-500'
-                                            }`}
-                                        style={{ width: `${(loc.value / maxLocValue) * 100}%` }}
-                                    />
-                                </div>
+                    <div className="mt-4 flex gap-2">
+                        {data.by_type.slice(0, 3).map((t, i) => (
+                            <div key={i} className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden">
+                                <div className="h-full rounded-full" style={{ width: '100%', backgroundColor: COLORS[t.name] || '#CBD5E1' }}></div>
                             </div>
                         ))}
                     </div>
+                    <p className="text-xs text-slate-400 mt-2 font-medium">Distribution by category</p>
+                </div>
+
+                {/* Active Alerts */}
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-white to-red-50/20">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">System Alerts</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">0</h3>
+                        </div>
+                        <div className="p-2.5 bg-red-50 text-red-500 rounded-lg shadow-sm">
+                            <AlertTriangle size={20} />
+                        </div>
+                    </div>
+                    <div className="mt-4 flex items-center text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1.5 rounded-lg w-fit border border-emerald-100">
+                        <Leaf size={12} className="mr-1.5" /> Optimal Operations
+                    </div>
                 </div>
             </div>
 
-            {/* CHARTS ZONE */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Waste Composition Card */}
-                <div className="premium-card p-10">
-                    <div className="flex justify-between items-center mb-10">
-                        <div>
-                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Material Streams</h3>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Composition Breakdown</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                {/* Main Chart Section (2 cols) */}
+                <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-bold text-slate-800 text-lg">Waste Composition Analysis</h3>
+                        <div className="flex gap-2">
+                            <button onClick={onViewHistory} className="text-xs font-semibold px-3 py-1.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">View Data</button>
                         </div>
                     </div>
-                    <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={data.by_type || []}
-                                    innerRadius={70}
-                                    outerRadius={100}
-                                    paddingAngle={8}
-                                    dataKey="value"
-                                    stroke="none"
-                                >
-                                    {(data.by_type || []).map((entry, index) => (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={COLORS[entry.name] || '#64748b'}
-                                            className="hover:opacity-80 transition-opacity cursor-pointer focus:outline-none"
+
+                    <div className="h-[300px] w-full flex flex-col sm:flex-row gap-6">
+                        <div className="flex-1">
+                            {data.by_type.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={data.by_type} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E2E8F0" />
+                                        <XAxis type="number" hide />
+                                        <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12, fill: '#64748B', fontWeight: 600 }} tickLine={false} axisLine={false} />
+                                        <Tooltip
+                                            cursor={{ fill: '#F8FAFC' }}
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
                                         />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{
-                                        borderRadius: '1.25rem',
-                                        border: 'none',
-                                        boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
-                                        padding: '1rem'
-                                    }}
-                                />
-                                <Legend
-                                    verticalAlign="middle"
-                                    align="right"
-                                    layout="vertical"
-                                    iconType="circle"
-                                    formatter={(value) => (
-                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">
-                                            {value}
-                                        </span>
-                                    )}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
+                                        <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={24}>
+                                            {data.by_type.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[entry.name] || '#94A3B8'} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="h-full flex items-center justify-center text-slate-400 text-sm font-medium bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                                    No data recorded today
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Visual Location Breakdown (REAL DATA) */}
+                        <div className="w-full sm:w-56 pl-0 sm:pl-6 sm:border-l border-slate-100">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-5">By Collection Point</h4>
+                            <div className="space-y-5">
+                                {sortedLocations.length > 0 ? sortedLocations.map((loc, i) => (
+                                    <div key={i}>
+                                        <div className="flex justify-between text-xs mb-1.5">
+                                            <span className="font-semibold text-slate-700 truncate max-w-[100px]" title={loc.name}>{loc.name}</span>
+                                            <span className="text-slate-500 font-mono">{Number(loc.value).toFixed(1)}kg</span>
+                                        </div>
+                                        <div className="w-full bg-slate-100 rounded-full h-1.5">
+                                            <div className="bg-slate-800 h-1.5 rounded-full" style={{ width: `${(loc.value / maxLocValue) * 100}%`, opacity: 0.2 + ((loc.value / maxLocValue)) }}></div>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <p className="text-xs text-slate-400 text-center py-4">No location data</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Location Rankings Card */}
-                <div className="premium-card p-10">
-                    <div className="flex justify-between items-center mb-10">
-                        <div>
-                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Spatial Load</h3>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Nodal Distribution</p>
+                {/* Recent Activity Feed (1 col) */}
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-0 flex flex-col h-full overflow-hidden">
+                    <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+                        <h3 className="font-bold text-slate-800">Live Feed</h3>
+                        <div className="relative flex h-2.5 w-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                         </div>
                     </div>
-                    <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={data.by_location || []} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }}
-                                    dy={10}
-                                />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} />
-                                <Tooltip
-                                    cursor={{ fill: '#f8fafc' }}
-                                    contentStyle={{ borderRadius: '1.25rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                                />
-                                <Bar
-                                    dataKey="value"
-                                    fill="#0f172a"
-                                    radius={[8, 8, 0, 0]}
-                                    barSize={40}
-                                    className="hover:fill-emerald-600 transition-colors cursor-pointer"
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
+
+                    <div className="flex-1 overflow-y-auto p-0 scrollbar-thin scrollbar-thumb-slate-200">
+                        {data.recent.length > 0 ? (
+                            data.recent.map((log, i) => (
+                                <div key={log.id} className="p-4 flex items-start gap-4 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 group">
+                                    <div className="relative flex-shrink-0">
+                                        {log.image_url ? (
+                                            <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shadow-sm group-hover:shadow-md transition-shadow">
+                                                <img src={log.image_url} alt="Waste" className="w-full h-full object-cover" />
+                                            </div>
+                                        ) : (
+                                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-sm
+                                        ${log.waste_type === 'Wet' ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' :
+                                                    log.waste_type === 'Dry' ? 'bg-gradient-to-br from-blue-400 to-blue-600' :
+                                                        log.waste_type === 'E-waste' ? 'bg-gradient-to-br from-purple-400 to-purple-600' : 'bg-gradient-to-br from-amber-400 to-amber-600'}`}>
+                                                {log.waste_type[0]}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0 pt-0.5">
+                                        <div className="flex justify-between items-start">
+                                            <p className="text-sm font-bold text-slate-900 truncate pr-2">{log.location_name}</p>
+                                            <span className="block font-bold text-slate-900 text-sm whitespace-nowrap">{log.quantity_kg}<span className="text-[10px] text-slate-400 font-medium ml-0.5">KG</span></span>
+                                        </div>
+                                        <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                                            <Clock size={10} />
+                                            {new Date(log.collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} •
+                                            <span className={`font-semibold ${log.waste_type === 'Wet' ? 'text-emerald-600' :
+                                                log.waste_type === 'Dry' ? 'text-blue-600' : 'text-slate-600'
+                                                }`}>{log.waste_type}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="h-40 flex flex-col items-center justify-center text-slate-400 text-sm space-y-2">
+                                <div className="p-3 bg-slate-50 rounded-full">
+                                    <ImageIcon size={20} className="text-slate-300" />
+                                </div>
+                                <p>No recent activity</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
+                        <button onClick={onViewHistory} className="text-xs font-bold text-slate-600 hover:text-emerald-700 flex items-center justify-center gap-1.5 mx-auto transition-colors uppercase tracking-wide">
+                            View Full History <ArrowRight size={12} />
+                        </button>
                     </div>
                 </div>
             </div>
-
         </div>
     );
 };
+
+// Polished Loading State
+const DashboardSkeleton = () => (
+    <div className="space-y-6 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => <div key={i} className="h-32 bg-slate-100 rounded-xl border border-slate-200"></div>)}
+        </div>
+        <div className="grid grid-cols-3 gap-6">
+            <div className="col-span-2 h-96 bg-slate-100 rounded-xl border border-slate-200"></div>
+            <div className="h-96 bg-slate-100 rounded-xl border border-slate-200"></div>
+        </div>
+    </div>
+);
 
 export default AdminDashboard;
