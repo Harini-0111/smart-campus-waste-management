@@ -1,166 +1,108 @@
 import { useState } from 'react';
 import WasteForm from './components/WasteForm';
-import AdminDashboard from './components/AdminDashboard';
-import StaffDashboard from './components/StaffDashboard';
-import UserDashboard from './components/UserDashboard';
-import Analytics from './components/Analytics';
-import History from './components/History';
-import Login from './components/Login';
-import Logo from './components/Logo';
-import AdminTaskManager from './components/AdminTaskManager';
-import PageTransition from './components/PageTransition';
-import {
-  LayoutGrid, SquarePlus, ChartBar, History as HistoryIcon,
-  LogOut, Activity
-} from 'lucide-react';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { NotificationProvider } from './components/NotificationSystem';
-import ErrorBoundary from './components/ErrorBoundary';
+import Dashboard from './components/Dashboard';
+import { LayoutGrid, PlusSquare, BarChart2, Bell, Search, Menu, UserCircle } from 'lucide-react';
 
-function AppContent() {
-  const { isAuthenticated, role, logout, user } = useAuth();
+function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleEntryAdded = () => {
     setRefreshTrigger(prev => prev + 1);
-    setActiveTab('dashboard');
+    setActiveTab('dashboard'); // Auto-switch to see results
   };
 
-  if (!isAuthenticated) {
-    return <Login />;
-  }
-
-  const isAdmin = role === 'admin' || role === 'block_admin';
-  const roleLabel =
-    role === 'admin'
-      ? 'Super Admin'
-      : role === 'block_admin'
-        ? 'Block Admin'
-        : role === 'staff'
-          ? 'Field Staff'
-          : 'Student';
-
-  const badgeLabel =
-    role === 'admin'
-      ? 'SA'
-      : role === 'block_admin'
-        ? 'BA'
-        : role === 'staff'
-          ? 'FS'
-          : 'ST';
-
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-950 antialiased selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-emerald-200 selection:text-emerald-900">
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-3xl border-b border-slate-200/50">
-        <div className="max-w-[1700px] mx-auto px-8 h-24 flex items-center justify-between">
+      {/* SaaS Sticky Header */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
-          <div className="flex items-center gap-12">
-            <div
-              className="flex items-center gap-4 cursor-pointer group"
-              onClick={() => setActiveTab('dashboard')}
-            >
-              <div className="bg-slate-950 p-2.5 rounded-2xl shadow-xl shadow-slate-900/20 group-hover:rotate-12 transition-all duration-500">
-                <Logo size={28} />
+          {/* Logo & Brand */}
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
+              <div className="bg-emerald-600 rounded-lg p-1.5 shadow-lg shadow-emerald-200">
+                <LayoutGrid className="text-white" size={20} />
               </div>
-              <div className="flex flex-col">
-                <span className="font-black text-2xl tracking-tight text-slate-950 leading-none">
-                  Eco<span className="text-emerald-600">Campus</span>
-                </span>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                    {roleLabel} Console
-                  </span>
-                </div>
-              </div>
+              <span className="font-bold text-lg tracking-tight text-slate-900">EcoCampus</span>
             </div>
 
-            <nav className="hidden xl:flex items-center gap-1 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/40">
-              <NavButton active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={LayoutGrid} label="Insights" />
-              {isAdmin && <NavButton active={activeTab === 'entry'} onClick={() => setActiveTab('entry')} icon={SquarePlus} label="Log Waste" />}
-              {isAdmin && <NavButton active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} icon={Activity} label="Directives" />}
-              <NavButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={HistoryIcon} label="Audit Log" />
-              {isAdmin && <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={ChartBar} label="Intelligence" />}
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              <NavButton
+                active={activeTab === 'dashboard'}
+                onClick={() => setActiveTab('dashboard')}
+                icon={LayoutGrid}
+                label="Dashboard"
+              />
+              <NavButton
+                active={activeTab === 'entry'}
+                onClick={() => setActiveTab('entry')}
+                icon={PlusSquare}
+                label="Log Waste"
+              />
+              <NavButton
+                active={activeTab === 'analytics'}
+                onClick={() => { }}
+                icon={BarChart2}
+                label="Analytics"
+                badge="Pro"
+              />
             </nav>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="hidden lg:flex items-center gap-4 pr-6 border-r border-slate-200">
-              <div className="text-right">
-                <p className="text-xs font-black text-slate-950 tracking-tight leading-none mb-1">
-                  {user?.username}
-                </p>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                  Secure ID Verified
-                </p>
-              </div>
-              <div
-                onClick={logout}
-                className="h-10 w-10 rounded-xl bg-slate-950 text-white flex items-center justify-center text-[10px] font-black shadow-lg cursor-pointer hover:bg-emerald-600 transition-colors"
-              >
-                {badgeLabel}
-              </div>
+          {/* Right Actions */}
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center bg-slate-100 rounded-md px-3 py-1.5 text-sm text-slate-500 border border-transparent focus-within:border-emerald-500/50 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+              <Search size={14} className="mr-2" />
+              <input type="text" placeholder="Search..." className="bg-transparent border-none outline-none w-24 focus:w-40 transition-all placeholder:text-slate-400" />
             </div>
-
-            <button
-              onClick={logout}
-              className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100"
-              title="Sign Out"
-            >
-              <LogOut size={20} />
+            <button className="relative p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
+              <Bell size={20} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
             </button>
+            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold cursor-pointer hover:ring-2 hover:ring-offset-2 hover:ring-emerald-500 transition-all">
+              AD
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        <PageTransition activeKey={role === 'staff' ? 'staff' : activeTab}>
-          {role === 'staff' ? (
-            <StaffDashboard />
-          ) : (
-            <>
-              {activeTab === 'dashboard' &&
-                (isAdmin ? (
-                  <AdminDashboard
-                    refreshTrigger={refreshTrigger}
-                    onViewHistory={() => setActiveTab('history')}
-                  />
-                ) : (
-                  <UserDashboard onOpenHistory={() => setActiveTab('history')} />
-                ))}
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-slideUp">
+        {/* Page Title & Breadcrumbs */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-slate-900">
+            {activeTab === 'dashboard' ? 'Campus Overview' : activeTab === 'entry' ? 'New Entry' : 'Analytics'}
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {activeTab === 'dashboard' ? 'Real-time monitoring of hydration and waste metrics.' : 'Log a new segregated waste collection batch.'}
+          </p>
+        </div>
 
-              {activeTab === 'entry' && <WasteForm onEntryAdded={handleEntryAdded} />}
-              {activeTab === 'tasks' && <AdminTaskManager />}
-              {activeTab === 'history' && <History />}
-              {activeTab === 'analytics' && <Analytics />}
-            </>
-          )}
-        </PageTransition>
+        {activeTab === 'dashboard' && <Dashboard refreshTrigger={refreshTrigger} />}
+        {activeTab === 'entry' && <WasteForm onEntryAdded={handleEntryAdded} />}
+        {activeTab === 'analytics' && <div className="p-12 text-center text-slate-400 bg-white rounded-xl border border-slate-200 border-dashed">Analytics Module Coming Soon</div>}
+
       </main>
     </div>
   );
 }
 
-const NavButton = ({ active, onClick, icon: Icon, label }) => (
-  <button onClick={onClick} className={`nav-link ${active ? 'nav-link-active' : ''}`}>
-    <Icon size={18} />
+const NavButton = ({ active, onClick, icon: Icon, label, badge }) => (
+  <button
+    onClick={onClick}
+    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200
+        ${active
+        ? 'bg-slate-100 text-slate-900'
+        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+      }`}
+  >
+    <Icon size={16} className={active ? 'text-emerald-600' : 'text-slate-400'} />
     {label}
+    {badge && <span className="text-[10px] uppercase font-bold text-white bg-emerald-500 px-1.5 rounded-sm">{badge}</span>}
   </button>
 );
-
-function App() {
-  return (
-    <NotificationProvider>
-      <ErrorBoundary>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </ErrorBoundary>
-    </NotificationProvider>
-  );
-}
 
 export default App;
