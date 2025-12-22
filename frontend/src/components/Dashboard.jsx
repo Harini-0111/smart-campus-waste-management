@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
-    TrendingUp, AlertTriangle, Leaf, Clock, ArrowRight,
-    BarChart3, Activity, CheckCircle2
+    TrendingUp, TrendingDown, AlertTriangle, Leaf, Clock, ArrowRight,
+    BarChart3, Activity, CheckCircle2, MoreHorizontal, Image as ImageIcon
 } from 'lucide-react';
 
 const Dashboard = ({ refreshTrigger, onViewHistory }) => {
@@ -11,9 +11,10 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
     const [loading, setLoading] = useState(true);
 
     // Simulated metrics
-    const segregationScore = 92;
-    const yesterdayTotal = 145.5;
-    const growth = data.total_today > 0 ? ((data.total_today - yesterdayTotal) / yesterdayTotal * 100).toFixed(1) : 0;
+    const segregationScore = 94;
+    const yesterdayTotal = 120.5;
+    const growth = data.total_today > 0 ? ((data.total_today - yesterdayTotal) / yesterdayTotal * 100) : 0;
+    const growthIsPositive = growth >= 0;
 
     const fetchData = async () => {
         try {
@@ -21,7 +22,7 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
             setTimeout(() => {
                 setData(res.data);
                 setLoading(false);
-            }, 500);
+            }, 600);
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
             setLoading(false);
@@ -57,51 +58,52 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
                 {/* Total Waste Card */}
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Generated</p>
-                            <h3 className="text-3xl font-bold text-slate-900 mt-2">{Number(data.total_today).toFixed(1)} <span className="text-base font-medium text-slate-400">kg</span></h3>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Generated</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">{Number(data.total_today).toFixed(1)} <span className="text-base font-semibold text-slate-400">kg</span></h3>
                         </div>
-                        <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                        <div className="p-2.5 bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-600 rounded-lg shadow-sm">
                             <Activity size={20} />
                         </div>
                     </div>
-                    <div className="mt-4 flex items-center text-xs font-medium">
-                        <span className={`flex items-center gap-1 ${growth >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                            <TrendingUp size={14} /> {Math.abs(growth)}%
+                    <div className="mt-4 flex items-center text-xs font-semibold">
+                        <span className={`flex items-center gap-1 ${growthIsPositive ? 'text-red-500' : 'text-emerald-600'}`}>
+                            {growthIsPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                            {Math.abs(growth).toFixed(1)}%
                         </span>
                         <span className="text-slate-400 ml-2">vs yesterday</span>
                     </div>
                 </div>
 
                 {/* Segregation Score */}
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Segregation Quality</p>
-                            <h3 className="text-3xl font-bold text-slate-900 mt-2">{segregationScore}%</h3>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Segregation Quality</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">{segregationScore}%</h3>
                         </div>
-                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                        <div className="p-2.5 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 rounded-lg shadow-sm">
                             <CheckCircle2 size={20} />
                         </div>
                     </div>
                     <div className="mt-4 w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${segregationScore}%` }}></div>
+                        <div className="bg-blue-500 h-1.5 rounded-full shadow-lg shadow-blue-500/30" style={{ width: `${segregationScore}%` }}></div>
                     </div>
-                    <p className="text-xs text-slate-400 mt-2">Excellent compliance rate</p>
+                    <p className="text-xs text-slate-400 mt-2 font-medium">Top Performer: <strong>Science Block</strong></p>
                 </div>
 
                 {/* Dominant Type */}
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Top Category</p>
-                            <h3 className="text-3xl font-bold text-slate-900 mt-2 truncate">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Top Category</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight truncate">
                                 {data.by_type.length > 0 ? data.by_type.sort((a, b) => b.value - a.value)[0]?.name : '-'}
                             </h3>
                         </div>
-                        <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
+                        <div className="p-2.5 bg-gradient-to-br from-amber-50 to-amber-100 text-amber-600 rounded-lg shadow-sm">
                             <BarChart3 size={20} />
                         </div>
                     </div>
@@ -112,22 +114,22 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                             </div>
                         ))}
                     </div>
-                    <p className="text-xs text-slate-400 mt-2">Distribution across categories</p>
+                    <p className="text-xs text-slate-400 mt-2 font-medium">Mostly organic waste today</p>
                 </div>
 
                 {/* Active Alerts */}
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-red-50/30">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-white to-red-50/20">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">System Alerts</p>
-                            <h3 className="text-3xl font-bold text-slate-900 mt-2">0</h3>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">System Alerts</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">0</h3>
                         </div>
-                        <div className="p-2 bg-red-50 text-red-500 rounded-lg">
+                        <div className="p-2.5 bg-red-50 text-red-500 rounded-lg shadow-sm">
                             <AlertTriangle size={20} />
                         </div>
                     </div>
-                    <div className="mt-4 flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded w-fit">
-                        <Leaf size={12} className="mr-1" /> System Nominal
+                    <div className="mt-4 flex items-center text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1.5 rounded-lg w-fit border border-emerald-100">
+                        <Leaf size={12} className="mr-1.5" /> Optimal Operations
                     </div>
                 </div>
             </div>
@@ -137,25 +139,25 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                 {/* Main Chart Section (2 cols) */}
                 <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-slate-800">Waste Composition Analysis</h3>
+                        <h3 className="font-bold text-slate-800 text-lg">Waste Composition Analysis</h3>
                         <div className="flex gap-2">
-                            <button onClick={onViewHistory} className="text-xs font-medium px-3 py-1 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-md transition-colors">View Details</button>
+                            <button onClick={onViewHistory} className="text-xs font-semibold px-3 py-1.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">View Details</button>
                         </div>
                     </div>
 
-                    <div className="h-[300px] w-full flex">
+                    <div className="h-[300px] w-full flex flex-col sm:flex-row gap-6">
                         <div className="flex-1">
                             {data.by_type.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={data.by_type} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                    <BarChart data={data.by_type} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E2E8F0" />
                                         <XAxis type="number" hide />
-                                        <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12, fill: '#64748B' }} tickLine={false} axisLine={false} />
+                                        <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12, fill: '#64748B', fontWeight: 600 }} tickLine={false} axisLine={false} />
                                         <Tooltip
-                                            cursor={{ fill: '#F1F5F9' }}
-                                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                            cursor={{ fill: '#F8FAFC' }}
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
                                         />
-                                        <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={32}>
+                                        <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={24}>
                                             {data.by_type.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={COLORS[entry.name] || '#94A3B8'} />
                                             ))}
@@ -163,19 +165,21 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <div className="h-full flex items-center justify-center text-slate-400 text-sm">No data recorded today</div>
+                                <div className="h-full flex items-center justify-center text-slate-400 text-sm font-medium bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                                    No data recorded today
+                                </div>
                             )}
                         </div>
 
                         {/* Visual Location Breakdown */}
-                        <div className="w-48 pl-6 border-l border-slate-100 hidden sm:block">
-                            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">By Location</h4>
-                            <div className="space-y-4">
+                        <div className="w-full sm:w-56 pl-0 sm:pl-6 sm:border-l border-slate-100">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-5">By Collection Point</h4>
+                            <div className="space-y-5">
                                 {MOCK_LOCATION_DATA.map((loc, i) => (
                                     <div key={i}>
-                                        <div className="flex justify-between text-xs mb-1">
-                                            <span className="font-medium text-slate-600">{loc.name}</span>
-                                            <span className="text-slate-400">{loc.val}%</span>
+                                        <div className="flex justify-between text-xs mb-1.5">
+                                            <span className="font-semibold text-slate-700">{loc.name}</span>
+                                            <span className="text-slate-500 font-mono">{loc.val}%</span>
                                         </div>
                                         <div className="w-full bg-slate-100 rounded-full h-1.5">
                                             <div className="bg-slate-800 h-1.5 rounded-full" style={{ width: `${loc.val}%`, opacity: 0.2 + (loc.val / 100) }}></div>
@@ -189,49 +193,59 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
 
                 {/* Recent Activity Feed (1 col) */}
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-0 flex flex-col h-full overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
                         <h3 className="font-bold text-slate-800">Live Feed</h3>
-                        <div className="relative flex h-2 w-2">
+                        <div className="relative flex h-2.5 w-2.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-0">
+                    <div className="flex-1 overflow-y-auto p-0 scrollbar-thin scrollbar-thumb-slate-200">
                         {data.recent.length > 0 ? (
                             data.recent.map((log, i) => (
-                                <div key={log.id} className={`p-4 flex items-center gap-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0`}>
-                                    <div className="relative">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold
-                                    ${log.waste_type === 'Wet' ? 'bg-emerald-500' :
-                                                log.waste_type === 'Dry' ? 'bg-blue-500' :
-                                                    log.waste_type === 'E-waste' ? 'bg-purple-500' : 'bg-amber-500'}`}>
-                                            {log.waste_type[0]}
+                                <div key={log.id} className="p-4 flex items-start gap-4 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 group">
+                                    <div className="relative flex-shrink-0">
+                                        {log.image_url ? (
+                                            <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shadow-sm group-hover:shadow-md transition-shadow">
+                                                <img src={log.image_url} alt="Waste" className="w-full h-full object-cover" />
+                                            </div>
+                                        ) : (
+                                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-sm
+                                        ${log.waste_type === 'Wet' ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' :
+                                                    log.waste_type === 'Dry' ? 'bg-gradient-to-br from-blue-400 to-blue-600' :
+                                                        log.waste_type === 'E-waste' ? 'bg-gradient-to-br from-purple-400 to-purple-600' : 'bg-gradient-to-br from-amber-400 to-amber-600'}`}>
+                                                {log.waste_type[0]}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0 pt-0.5">
+                                        <div className="flex justify-between items-start">
+                                            <p className="text-sm font-bold text-slate-900 truncate pr-2">{log.location_name}</p>
+                                            <span className="block font-bold text-slate-900 text-sm whitespace-nowrap">{log.quantity_kg}<span className="text-[10px] text-slate-400 font-medium ml-0.5">KG</span></span>
                                         </div>
-                                        {i === 0 && <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-white"></span>
-                                        </span>}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-slate-900 truncate">{log.location_name}</p>
-                                        <p className="text-xs text-slate-500 flex items-center gap-1">
+                                        <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                                            <Clock size={10} />
                                             {new Date(log.collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} •
-                                            <span className="font-medium">{log.waste_type}</span>
+                                            <span className={`font-semibold ${log.waste_type === 'Wet' ? 'text-emerald-600' :
+                                                    log.waste_type === 'Dry' ? 'text-blue-600' : 'text-slate-600'
+                                                }`}>{log.waste_type}</span>
                                         </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="block font-bold text-slate-900 text-sm">{log.quantity_kg}</span>
-                                        <span className="text-[10px] text-slate-400 uppercase">kg</span>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="h-40 flex items-center justify-center text-slate-400 text-sm">No recent activity</div>
+                            <div className="h-40 flex flex-col items-center justify-center text-slate-400 text-sm space-y-2">
+                                <div className="p-3 bg-slate-50 rounded-full">
+                                    <ImageIcon size={20} className="text-slate-300" />
+                                </div>
+                                <p>No recent activity</p>
+                            </div>
                         )}
                     </div>
 
                     <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
-                        <button onClick={onViewHistory} className="text-xs font-semibold text-slate-600 hover:text-emerald-600 flex items-center justify-center gap-1 mx-auto transition-colors">
+                        <button onClick={onViewHistory} className="text-xs font-bold text-slate-600 hover:text-emerald-700 flex items-center justify-center gap-1.5 mx-auto transition-colors uppercase tracking-wide">
                             View Full History <ArrowRight size={12} />
                         </button>
                     </div>
@@ -245,11 +259,11 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
 const DashboardSkeleton = () => (
     <div className="space-y-6 animate-pulse">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => <div key={i} className="h-32 bg-slate-200 rounded-xl"></div>)}
+            {[...Array(4)].map((_, i) => <div key={i} className="h-32 bg-slate-100 rounded-xl border border-slate-200"></div>)}
         </div>
         <div className="grid grid-cols-3 gap-6">
-            <div className="col-span-2 h-96 bg-slate-200 rounded-xl"></div>
-            <div className="h-96 bg-slate-200 rounded-xl"></div>
+            <div className="col-span-2 h-96 bg-slate-100 rounded-xl border border-slate-200"></div>
+            <div className="h-96 bg-slate-100 rounded-xl border border-slate-200"></div>
         </div>
     </div>
 );

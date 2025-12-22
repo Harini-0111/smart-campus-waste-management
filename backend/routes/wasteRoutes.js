@@ -15,7 +15,7 @@ router.get('/locations', async (req, res) => {
 
 // POST /api/v1/waste
 router.post('/waste', async (req, res) => {
-    const { location_id, waste_type, quantity_kg } = req.body;
+    const { location_id, waste_type, quantity_kg, image_url } = req.body;
     console.log('Received payload:', req.body); // Debug log
 
     if (!location_id || !waste_type || !quantity_kg) {
@@ -24,12 +24,12 @@ router.post('/waste', async (req, res) => {
 
     try {
         const result = await db.query(
-            'INSERT INTO waste_logs (location_id, waste_type, quantity_kg, collected_at) VALUES ($1, $2, $3, NOW()) RETURNING *',
-            [location_id, waste_type, quantity_kg]
+            'INSERT INTO waste_logs (location_id, waste_type, quantity_kg, image_url, collected_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
+            [location_id, waste_type, quantity_kg, image_url || null]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
-        console.error('Error adding waste:', err.message); // Better logging
+        console.error('Error adding waste:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
