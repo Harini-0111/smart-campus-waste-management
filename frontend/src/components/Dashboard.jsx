@@ -3,14 +3,14 @@ import axios from 'axios';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
     TrendingUp, AlertTriangle, Leaf, Clock, ArrowRight,
-    BarChart3, Activity, MapPin, CheckCircle2, MoreHorizontal
+    BarChart3, Activity, CheckCircle2
 } from 'lucide-react';
 
-const Dashboard = ({ refreshTrigger }) => {
+const Dashboard = ({ refreshTrigger, onViewHistory }) => {
     const [data, setData] = useState({ total_today: 0, by_type: [], recent: [] });
     const [loading, setLoading] = useState(true);
 
-    // Simulated metrics for visual depth (would be real APIs in prod)
+    // Simulated metrics
     const segregationScore = 92;
     const yesterdayTotal = 145.5;
     const growth = data.total_today > 0 ? ((data.total_today - yesterdayTotal) / yesterdayTotal * 100).toFixed(1) : 0;
@@ -139,8 +139,7 @@ const Dashboard = ({ refreshTrigger }) => {
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-slate-800">Waste Composition Analysis</h3>
                         <div className="flex gap-2">
-                            <button className="text-xs font-medium px-3 py-1 bg-slate-100 rounded-md text-slate-600">Today</button>
-                            <button className="text-xs font-medium px-3 py-1 text-slate-400 hover:text-slate-600">Week</button>
+                            <button onClick={onViewHistory} className="text-xs font-medium px-3 py-1 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-md transition-colors">View Details</button>
                         </div>
                     </div>
 
@@ -168,7 +167,7 @@ const Dashboard = ({ refreshTrigger }) => {
                             )}
                         </div>
 
-                        {/* Visual Location Breakdown (Mocked for visual balance as requested) */}
+                        {/* Visual Location Breakdown */}
                         <div className="w-48 pl-6 border-l border-slate-100 hidden sm:block">
                             <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">By Location</h4>
                             <div className="space-y-4">
@@ -232,8 +231,8 @@ const Dashboard = ({ refreshTrigger }) => {
                     </div>
 
                     <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
-                        <button className="text-xs font-semibold text-slate-600 hover:text-emerald-600 flex items-center justify-center gap-1 mx-auto transition-colors">
-                            View Audit Logs <ArrowRight size={12} />
+                        <button onClick={onViewHistory} className="text-xs font-semibold text-slate-600 hover:text-emerald-600 flex items-center justify-center gap-1 mx-auto transition-colors">
+                            View Full History <ArrowRight size={12} />
                         </button>
                     </div>
                 </div>
