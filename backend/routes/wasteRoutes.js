@@ -60,4 +60,18 @@ router.get('/dashboard', async (req, res) => {
     }
 });
 
+
+// GET /api/v1/history
+router.get('/history', async (req, res) => {
+    try {
+        const result = await db.query(
+            'SELECT w.*, l.name as location_name FROM waste_logs w LEFT JOIN locations l ON w.location_id = l.id ORDER BY collected_at DESC'
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error fetching history:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;

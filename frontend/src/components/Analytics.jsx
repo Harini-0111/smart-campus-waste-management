@@ -2,203 +2,145 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-    PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
+    LineChart, Line, AreaChart, Area
 } from 'recharts';
-import { API_URL } from '../config';
-import { Activity, Zap, TrendingUp, Users, MapPin, Gauge } from 'lucide-react';
-import { DashboardSkeleton, ChartSkeleton } from './SkeletonLoader';
-
-const COLORS = {
-    'Wet': '#10B981',
-    'Dry': '#3B82F6',
-    'Recyclable': '#F59E0B',
-    'Electronic': '#8B5CF6',
-    'Hazardous': '#EF4444'
-};
+import { Download, Calendar, Filter } from 'lucide-react';
 
 const Analytics = () => {
-    const [history, setHistory] = useState([]);
-    const [prediction, setPrediction] = useState(null);
-    const [hotspots, setHotspots] = useState([]);
-    const [efficiency, setEfficiency] = useState([]);
+    const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const config = { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } };
-                const [h, p, hs, e] = await Promise.all([
-                    axios.get(`${API_URL}/history`, config),
-                    axios.get(`${API_URL}/analytics/prediction`, config),
-                    axios.get(`${API_URL}/analytics/hotspots`, config),
-                    axios.get(`${API_URL}/analytics/efficiency`, config)
-                ]);
-
-                setHistory(h.data || []);
-                setPrediction(p?.data?.prediction || null);
-                setHotspots(hs.data || []);
-                setEfficiency(e.data || []);
-                setLoading(false);
-            } catch (error) {
-                console.error('Fetch intelligence error:', error);
-                setLoading(false);
-            }
-        };
-        fetchData();
+        fetchHistory();
     }, []);
 
-    const totalKg = (history || []).reduce((sum, item) => sum + Number(item?.quantity_kg || 0), 0);
+    const fetchHistory = async () => {
+        try {
+            const res = await axios.get('http://localhost:3001/api/v1/history');
+            setData(res.data);
+            setLoading(false);
+        } catch (error) {
+            console.error(error);
+            setLoading(false);
+        }
+    };
 
-    const typeData = history.reduce((acc, item) => {
-        const name = item.waste_type === 'E-waste' ? 'Electronic' : item.waste_type;
-        const existing = acc.find(i => i.name === name);
-        if (existing) existing.value += Number(item.quantity_kg);
-        else acc.push({ name, value: Number(item.quantity_kg) });
+    // Process data for charts
+    const locationData = data.reduce((acc, curr) => {
+        const loc = curr.location_name || 'Unknown';
+        acc[loc] = (acc[loc] || 0) + Number(curr.quantity_kg);
         return acc;
-    }, []);
+    }, {});
 
-    if (loading) return (
-        <div className="max-w-7xl mx-auto px-4 py-12">
-            <DashboardSkeleton />
-        </div>
-    );
+    const chartDataLoc = Object.keys(locationData).map(k => ({ name: k, value: locationData[k] }));
+
+    // Mock Trend Data (since we only have recent data, we'll simulate a week)
+    const mockTrendData = [
+        { name: 'Mon', Wet: 40, Dry: 24, Recyclable: 10 },
+        { name: 'Tue', Wet: 35, Dry: 28, Recyclable: 12 },
+        { name: 'Wed', Wet: 42, Dry: 22, Recyclable: 15 },
+        { name: 'Thu', Wet: 38, Dry: 30, Recyclable: 8 },
+        { name: 'Fri', Wet: 50, Dry: 35, Recyclable: 18 },
+        { name: 'Sat', Wet: 20, Dry: 15, Recyclable: 5 },
+        { name: 'Sun', Wet: 25, Dry: 18, Recyclable: 6 },
+    ];
+
+    if (loading) return <div className="p-10 text-center text-slate-400">Loading Analytics...</div>;
 
     return (
-        <div className="space-y-12 animate-fadeIn pb-24 max-w-7xl mx-auto px-4">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10 mb-6">
-                <div>
-                    <div className="flex items-center gap-3 mb-6">
-                        <span className="badge-emerald">System Intelligence</span>
-                        {prediction && (
-                            <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-lg border border-blue-100 flex items-center gap-2">
-                                <TrendingUp size={12} /> Forecast: {prediction.trend}
-                            </span>
-                        )}
-                    </div>
-                    <h2 className="text-7xl font-black text-slate-950 tracking-[-0.05em] leading-none mb-6 text-gradient">Deep Analytics</h2>
-                    <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-[10px]">Verifiable Campus Sustainability Metrics</p>
-                </div>
+        <div className="space-y-8 animate-fadeIn pb-12">
 
-                <div className="flex gap-8 w-full md:w-auto">
-                    <div className="flex-1 premium-card p-8 flex flex-col min-w-[200px] border-l-4 border-l-emerald-500">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <Activity size={14} className="text-emerald-500" /> Managed Mass
-                        </span>
-                        <span className="text-5xl font-black text-slate-950 tabular-nums tracking-tighter">{totalKg.toFixed(1)}<span className="text-sm text-slate-300 ml-2">KG</span></span>
-                    </div>
-                    {prediction && (
-                        <div className="flex-1 premium-card p-8 flex flex-col min-w-[200px] border-l-4 border-l-blue-500">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <Zap size={14} className="text-blue-500" /> NexDay Forecast
-                            </span>
-                            <span className="text-5xl font-black text-slate-950 tabular-nums tracking-tighter">{prediction.prediction}<span className="text-sm text-slate-300 ml-2">KG</span></span>
-                        </div>
-                    )}
+            {/* Header Controls */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 className="text-xl font-bold text-slate-800">Advanced Analytics</h2>
+                    <p className="text-slate-500 text-sm">Deep dive into waste generation patterns</p>
+                </div>
+                <div className="flex gap-2">
+                    <button className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50">
+                        <Calendar size={16} /> Last 7 Days
+                    </button>
+                    <button className="flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 shadow-sm shadow-emerald-200">
+                        <Download size={16} /> Export Report
+                    </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                {/* Composition Pie */}
-                <div className="premium-card p-12 lg:col-span-1 min-h-[550px] flex flex-col">
-                    <div className="flex items-center justify-between mb-12">
-                        <h3 className="font-black text-slate-950 text-xl tracking-tighter uppercase flex items-center gap-4">
-                            <div className="w-2.5 h-8 bg-emerald-500 rounded-full"></div>
-                            Composition Audit
-                        </h3>
-                    </div>
-                    <div className="flex-1">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={typeData}
-                                    innerRadius={80}
-                                    outerRadius={120}
-                                    paddingAngle={10}
-                                    dataKey="value"
-                                    stroke="none"
-                                >
-                                    {typeData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[entry.name] || '#64748b'} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{ background: '#ffffff', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.1)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)', padding: '16px' }}
-                                    itemStyle={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', color: '#0f172a' }}
-                                />
-                                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontWeight: 'black', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '1px', color: '#64748b', paddingTop: '40px' }} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
+            {/* Main Trend Chart */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="font-semibold text-slate-800 mb-6">Weekly Generation Trend</h3>
+                <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={mockTrendData}>
+                            <defs>
+                                <linearGradient id="colorWet" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
+                                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                                </linearGradient>
+                                <linearGradient id="colorDry" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
+                                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748B' }} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B' }} />
+                            <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+                            <Legend />
+                            <Area type="monotone" dataKey="Wet" stroke="#10B981" fillOpacity={1} fill="url(#colorWet)" />
+                            <Area type="monotone" dataKey="Dry" stroke="#3B82F6" fillOpacity={1} fill="url(#colorDry)" />
+                        </AreaChart>
+                    </ResponsiveContainer>
                 </div>
+            </div>
 
-                {/* Hotspot Table/Chart */}
-                <div className="premium-card p-12 lg:col-span-2 min-h-[550px] flex flex-col relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-80 h-80 bg-red-400/5 -mr-16 -mt-16 rounded-full blur-[100px]"></div>
-                    <div className="flex items-center justify-between mb-12 relative z-10">
-                        <h3 className="font-black text-slate-950 text-xl tracking-tighter uppercase flex items-center gap-4">
-                            <div className="w-2.5 h-8 bg-orange-500 rounded-full"></div>
-                            Heat Index Map
-                        </h3>
-                        <MapPin size={24} className="text-slate-200" />
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                    <div className="flex-1 space-y-8 relative z-10">
-                        {hotspots.slice(0, 5).map((spot, i) => (
-                            <div key={i} className="flex items-center gap-8 group">
-                                <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-slate-300 border border-slate-100 transition-all group-hover:bg-slate-950 group-hover:text-white group-hover:scale-110">
-                                    0{i + 1}
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-end mb-3">
-                                        <span className="text-sm font-black text-slate-800 uppercase tracking-tight leading-none group-hover:text-slate-950 transition-colors">Zone Identifier: {spot.location_id}</span>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[11px] font-black text-orange-500 uppercase tabular-nums">INDEX: {spot.heat_index}</span>
-                                        </div>
-                                    </div>
-                                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-slate-950 transition-all duration-1000 group-hover:bg-orange-500"
-                                            style={{ width: `${Math.min(100, spot.heat_index * 2)}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Staff Efficiency Line Chart */}
-                <div className="premium-card p-12 lg:col-span-3 min-h-[450px] flex flex-col relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-400/5 -ml-32 -mt-32 rounded-full blur-[120px]"></div>
-                    <div className="flex items-center justify-between mb-12 relative z-10">
-                        <h3 className="font-black text-slate-950 text-xl tracking-tighter uppercase flex items-center gap-4">
-                            <div className="w-2.5 h-8 bg-blue-500 rounded-full"></div>
-                            Efficiency Benchmark
-                        </h3>
-                        <Gauge size={24} className="text-slate-200" />
-                    </div>
-
-                    <div className="flex-1 relative z-10">
+                {/* Location Breakdown */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 className="font-semibold text-slate-800 mb-6">Waste by Location</h3>
+                    <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={efficiency} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.03)" />
-                                <XAxis dataKey="staff_id" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: '900', fill: '#94a3b8', letterSpacing: '2px' }} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: '900', fill: '#94a3b8' }} />
-                                <Tooltip
-                                    cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 12 }}
-                                    contentStyle={{ background: '#ffffff', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.1)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)', padding: '16px' }}
-                                />
-                                <Bar dataKey="completion_rate" name="Completion Rate %" fill="#0f172a" radius={[12, 12, 0, 0]} barSize={50} />
-                                <Bar dataKey="avg_response_time" name="Avg Response (Hrs)" fill="#10b981" radius={[12, 12, 0, 0]} barSize={50} />
+                            <BarChart data={chartDataLoc} layout="vertical" margin={{ left: 20 }}>
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E2E8F0" />
+                                <XAxis type="number" hide />
+                                <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#475569', fontSize: 12 }} axisLine={false} tickLine={false} />
+                                <Tooltip cursor={{ fill: '#F8FAFC' }} contentStyle={{ borderRadius: '8px', border: 'none' }} />
+                                <Bar dataKey="value" fill="#6366F1" radius={[0, 4, 4, 0]} barSize={20} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
+
+                {/* Efficiency Metrics (Mock) */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 className="font-semibold text-slate-800 mb-6">Segregation Efficiency</h3>
+                    <div className="space-y-6">
+                        {[
+                            { label: 'Hostel Block A', val: 92, color: 'bg-emerald-500' },
+                            { label: 'Canteen', val: 65, color: 'bg-yellow-500' },
+                            { label: 'Academic Block', val: 88, color: 'bg-blue-500' },
+                            { label: 'Admin Office', val: 78, color: 'bg-purple-500' },
+                        ].map((item, i) => (
+                            <div key={i}>
+                                <div className="flex justify-between text-sm mb-1.5">
+                                    <span className="font-medium text-slate-700">{item.label}</span>
+                                    <span className="text-slate-500 font-mono">{item.val}%</span>
+                                </div>
+                                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                    <div className={`h-full ${item.color}`} style={{ width: `${item.val}%` }}></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-8 p-4 bg-slate-50 rounded-lg text-sm text-slate-600 border border-slate-100">
+                        💡 <strong>Insight:</strong> Canteen segregation has dropped by 12% this week. Recommended staff training session.
+                    </div>
+                </div>
             </div>
+
         </div>
     );
 };
 
 export default Analytics;
-

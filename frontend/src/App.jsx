@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import WasteForm from './components/WasteForm';
 import Dashboard from './components/Dashboard';
-import { LayoutGrid, PlusSquare, BarChart2, Bell, Search, Menu, UserCircle } from 'lucide-react';
+import Analytics from './components/Analytics';
+import History from './components/History';
+import { LayoutGrid, PlusSquare, BarChart2, Bell, Search, History as HistoryIcon, UserCircle } from 'lucide-react';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -9,7 +11,7 @@ function App() {
 
   const handleEntryAdded = () => {
     setRefreshTrigger(prev => prev + 1);
-    setActiveTab('dashboard'); // Auto-switch to see results
+    setActiveTab('dashboard');
   };
 
   return (
@@ -43,11 +45,16 @@ function App() {
                 label="Log Waste"
               />
               <NavButton
+                active={activeTab === 'history'}
+                onClick={() => setActiveTab('history')}
+                icon={HistoryIcon}
+                label="Logs"
+              />
+              <NavButton
                 active={activeTab === 'analytics'}
-                onClick={() => { }}
+                onClick={() => setActiveTab('analytics')}
                 icon={BarChart2}
                 label="Analytics"
-                badge="Pro"
               />
             </nav>
           </div>
@@ -71,26 +78,18 @@ function App() {
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-slideUp">
-        {/* Page Title & Breadcrumbs */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">
-            {activeTab === 'dashboard' ? 'Campus Overview' : activeTab === 'entry' ? 'New Entry' : 'Analytics'}
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            {activeTab === 'dashboard' ? 'Real-time monitoring of hydration and waste metrics.' : 'Log a new segregated waste collection batch.'}
-          </p>
-        </div>
 
-        {activeTab === 'dashboard' && <Dashboard refreshTrigger={refreshTrigger} />}
+        {activeTab === 'dashboard' && <Dashboard refreshTrigger={refreshTrigger} onViewHistory={() => setActiveTab('history')} />}
         {activeTab === 'entry' && <WasteForm onEntryAdded={handleEntryAdded} />}
-        {activeTab === 'analytics' && <div className="p-12 text-center text-slate-400 bg-white rounded-xl border border-slate-200 border-dashed">Analytics Module Coming Soon</div>}
+        {activeTab === 'history' && <History />}
+        {activeTab === 'analytics' && <Analytics />}
 
       </main>
     </div>
   );
 }
 
-const NavButton = ({ active, onClick, icon: Icon, label, badge }) => (
+const NavButton = ({ active, onClick, icon: Icon, label }) => (
   <button
     onClick={onClick}
     className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200
@@ -101,7 +100,6 @@ const NavButton = ({ active, onClick, icon: Icon, label, badge }) => (
   >
     <Icon size={16} className={active ? 'text-emerald-600' : 'text-slate-400'} />
     {label}
-    {badge && <span className="text-[10px] uppercase font-bold text-white bg-emerald-500 px-1.5 rounded-sm">{badge}</span>}
   </button>
 );
 
