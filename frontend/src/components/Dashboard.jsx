@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 const Dashboard = ({ refreshTrigger, onViewHistory }) => {
-    const [data, setData] = useState({ total_today: 0, by_type: [], recent: [] });
+    const [data, setData] = useState({ total_today: 0, by_type: [], by_location: [], recent: [] });
     const [loading, setLoading] = useState(true);
 
     // Simulated metrics
@@ -42,14 +42,11 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
         Hazardous: '#EF4444' // Red
     };
 
-    const MOCK_LOCATION_DATA = [
-        { name: 'Canteen', val: 45 },
-        { name: 'Hostel A', val: 32 },
-        { name: 'Library', val: 14 },
-        { name: 'Academic', val: 28 },
-    ];
-
     if (loading) return <DashboardSkeleton />;
+
+    // Sort locations by highest waste
+    const sortedLocations = [...(data.by_location || [])].sort((a, b) => b.value - a.value);
+    const maxLocValue = sortedLocations[0]?.value || 1;
 
     return (
         <div className="space-y-6 pb-12 animate-fadeIn text-slate-800">
@@ -114,7 +111,7 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                             </div>
                         ))}
                     </div>
-                    <p className="text-xs text-slate-400 mt-2 font-medium">Mostly organic waste today</p>
+                    <p className="text-xs text-slate-400 mt-2 font-medium">Distribution by category</p>
                 </div>
 
                 {/* Active Alerts */}
@@ -141,7 +138,7 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-slate-800 text-lg">Waste Composition Analysis</h3>
                         <div className="flex gap-2">
-                            <button onClick={onViewHistory} className="text-xs font-semibold px-3 py-1.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">View Details</button>
+                            <button onClick={onViewHistory} className="text-xs font-semibold px-3 py-1.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">View Data</button>
                         </div>
                     </div>
 
@@ -171,21 +168,23 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                             )}
                         </div>
 
-                        {/* Visual Location Breakdown */}
+                        {/* Visual Location Breakdown (REAL DATA) */}
                         <div className="w-full sm:w-56 pl-0 sm:pl-6 sm:border-l border-slate-100">
                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-5">By Collection Point</h4>
                             <div className="space-y-5">
-                                {MOCK_LOCATION_DATA.map((loc, i) => (
+                                {sortedLocations.length > 0 ? sortedLocations.map((loc, i) => (
                                     <div key={i}>
                                         <div className="flex justify-between text-xs mb-1.5">
-                                            <span className="font-semibold text-slate-700">{loc.name}</span>
-                                            <span className="text-slate-500 font-mono">{loc.val}%</span>
+                                            <span className="font-semibold text-slate-700 truncate max-w-[100px]" title={loc.name}>{loc.name}</span>
+                                            <span className="text-slate-500 font-mono">{Number(loc.value).toFixed(1)}kg</span>
                                         </div>
                                         <div className="w-full bg-slate-100 rounded-full h-1.5">
-                                            <div className="bg-slate-800 h-1.5 rounded-full" style={{ width: `${loc.val}%`, opacity: 0.2 + (loc.val / 100) }}></div>
+                                            <div className="bg-slate-800 h-1.5 rounded-full" style={{ width: `${(loc.value / maxLocValue) * 100}%`, opacity: 0.2 + ((loc.value / maxLocValue)) }}></div>
                                         </div>
                                     </div>
-                                ))}
+                                )) : (
+                                    <p className="text-xs text-slate-400 text-center py-4">No location data</p>
+                                )}
                             </div>
                         </div>
                     </div>
