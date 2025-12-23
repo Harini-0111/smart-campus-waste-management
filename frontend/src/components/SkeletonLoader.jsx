@@ -72,4 +72,23 @@ export const CardSkeleton = () => (
     </div>
 );
 
+export const ListSkeleton = ({ items = 3 }) => (
+    <div className="space-y-6">
+        {[...Array(items)].map((_, i) => (
+            <div key={i} className="premium-card p-8 space-y-4">
+                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+            </div>
+        ))}
+    </div>
+);
+
+export const ChartSkeleton = () => (
+    <div className="premium-card p-10">
+        <Skeleton className="h-8 w-1/4 mb-8" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
+    </div>
+);
+
 export default Skeleton;
