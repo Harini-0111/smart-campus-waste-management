@@ -34,7 +34,9 @@ router.post('/login', async (req, res) => {
                 id: user.id,
                 username: user.username,
                 role: user.role,
-                location_id: user.location_id
+                location_id: user.location_id,
+                impact_points: user.impact_points,
+                eco_level: user.eco_level
             }
         });
     } catch (err) {
@@ -43,7 +45,7 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// POST /api/v1/auth/register (Optional: for demo/testing)
+// POST /api/v1/auth/register
 router.post('/register', async (req, res) => {
     const { username, password, role, location_id } = req.body;
     // Basic validation

@@ -1,28 +1,35 @@
-import { useState } from 'react';
-import WasteForm from './WasteForm';
 import { LayoutGrid, Leaf, Award, ArrowRight, History, Recycle } from 'lucide-react';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const UserDashboard = () => {
+    const { user } = useAuth();
     const [view, setView] = useState('home'); // 'home' | 'log'
 
     const handleEntryAdded = () => {
         setView('home');
     };
 
+    const impactPoints = user?.impact_points || 0;
+    const ecoLevel = user?.eco_level || 1;
+
+    // Convert numeric level to Roman
+    const romanLevels = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+    const displayLevel = romanLevels[ecoLevel - 1] || ecoLevel;
+
     return (
         <div className="space-y-12 animate-fadeIn max-w-5xl mx-auto pb-24 px-4">
             {view === 'home' ? (
                 <div className="space-y-12">
                     {/* Hero Section */}
-                    <div className="relative overflow-hidden bg-slate-900 rounded-[3rem] p-12 text-white shadow-2xl shadow-slate-200/50 group animate-slideUp">
+                    <div className="relative overflow-hidden bg-slate-950 rounded-[3rem] p-12 text-white shadow-2xl shadow-slate-200/50 group animate-slideUp">
                         <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 -mr-20 -mt-20 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all duration-1000"></div>
                         <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/10 -ml-10 -mb-10 rounded-full blur-2xl"></div>
 
                         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-12">
                             <div className="text-center md:text-left flex-1">
-                                <span className="inline-block px-4 py-1.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-full mb-6">Environment Vanguard</span>
-                                <h2 className="text-5xl font-black mb-6 tracking-tighter leading-[1.1]">Sustainable <br /><span className="text-emerald-500">Campus Flow.</span></h2>
+                                <span className="inline-block px-4 py-1.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-full mb-6">Campus Steward</span>
+                                <h2 className="text-5xl font-black mb-6 tracking-tighter leading-[1.1]">Sustainable <br /><span className="text-emerald-500 text-gradient">Campus Flow.</span></h2>
                                 <p className="text-slate-400 text-lg opacity-90 max-w-md font-medium leading-relaxed">
                                     Your digital interface for a cleaner campus. Log. Track. Inspire.
                                 </p>
@@ -35,7 +42,7 @@ const UserDashboard = () => {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Impact Points</p>
-                                        <h4 className="text-3xl font-black tabular-nums">1,542</h4>
+                                        <h4 className="text-3xl font-black tabular-nums">{impactPoints.toLocaleString()}</h4>
                                     </div>
                                 </div>
                                 <div className="bg-white/5 backdrop-blur-2xl rounded-3xl p-6 border border-white/10 shadow-2xl flex items-center gap-5 hover:bg-white/10 transition-all stagger-2">
@@ -44,7 +51,7 @@ const UserDashboard = () => {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Eco Level</p>
-                                        <h4 className="text-3xl font-black tabular-nums">IV</h4>
+                                        <h4 className="text-3xl font-black tabular-nums">{displayLevel}</h4>
                                     </div>
                                 </div>
                             </div>

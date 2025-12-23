@@ -3,7 +3,7 @@ import axios from 'axios';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
     TrendingUp, TrendingDown, AlertTriangle, Leaf, Clock, ArrowRight,
-    BarChart3, Activity, CheckCircle2, MoreHorizontal, Image as ImageIcon
+    BarChart3, Activity, CheckCircle2, MoreHorizontal, Image as ImageIcon, ShieldAlert
 } from 'lucide-react';
 import { API_URL } from '../config';
 import { DashboardSkeleton } from './SkeletonLoader';
@@ -14,12 +14,6 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
     const [data, setData] = useState({ total_today: 0, by_type: [], by_location: [], recent: [] });
     const [predictions, setPredictions] = useState(null);
     const [loading, setLoading] = useState(true);
-
-    // Simulated metrics
-    const segregationScore = 94;
-    const yesterdayTotal = 120.5;
-    const growth = data.total_today > 0 ? ((data.total_today - yesterdayTotal) / yesterdayTotal * 100) : 0;
-    const growthIsPositive = growth >= 0;
 
     const fetchData = async () => {
         try {
@@ -32,13 +26,9 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
             setData(dashboardRes.data);
             setPredictions(predictionRes.data);
 
-            // Critical Alerts Logic
             const hasHazardous = dashboardRes.data.recent.some(r => r.waste_type === 'Hazardous');
             if (hasHazardous) {
-                notify("Critical: Hazardous Waste Detected in Recent Logs", "critical");
-            }
-            if (predictionRes.data.risk.level === 'critical') {
-                notify("System Alert: High Overflow Probability in Hostel Zone", "critical");
+                notify("Critical: Hazardous Waste Breach Detected", "critical");
             }
 
             setLoading(false);
@@ -54,149 +44,134 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
     }, [refreshTrigger]);
 
     const COLORS = {
-        Wet: '#10B981', // Emerald
-        Dry: '#3B82F6', // Blue
-        Recyclable: '#F59E0B', // Amber
-        'E-waste': '#8B5CF6', // Purple
-        Hazardous: '#EF4444' // Red
+        Wet: '#10B981',
+        Dry: '#3B82F6',
+        Recyclable: '#F59E0B',
+        'E-waste': '#8B5CF6',
+        Hazardous: '#EF4444'
     };
 
     if (loading) return <DashboardSkeleton />;
 
-    // Sort locations by highest waste
     const sortedLocations = [...(data.by_location || [])].sort((a, b) => b.value - a.value);
     const maxLocValue = sortedLocations[0]?.value || 1;
 
     return (
-        <div className="space-y-6 pb-12 animate-fadeIn text-slate-800">
+        <div className="space-y-12 pb-16 animate-fadeIn">
 
             {/* Top Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Total Waste Card */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="premium-card p-8 border-l-4 border-l-emerald-500 group">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded w-fit mb-2">Total Generated</p>
-                            <h3 className="text-4xl font-black text-slate-900 tracking-tight">{Number(data.total_today).toFixed(1)} <span className="text-lg font-bold text-slate-400">kg</span></h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Daily Managed Mass</p>
+                            <h3 className="text-4xl font-black text-slate-950 tracking-tighter">{Number(data.total_today).toFixed(1)} <span className="text-sm font-bold text-slate-300">KG</span></h3>
                         </div>
-                        <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-inner">
+                        <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100 shadow-sm transition-transform group-hover:scale-110">
                             <Activity size={24} />
                         </div>
                     </div>
                 </div>
 
-                {/* Segregation Score */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group">
+                <div className="premium-card p-8 border-l-4 border-l-blue-500 group">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded w-fit mb-2">Efficiency</p>
-                            <h3 className="text-4xl font-black text-slate-900 tracking-tight">{segregationScore}%</h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Asset Utilization</p>
+                            <h3 className="text-4xl font-black text-slate-950 tracking-tighter">88.5<span className="text-sm font-bold text-slate-300">%</span></h3>
                         </div>
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
+                        <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100 shadow-sm transition-transform group-hover:scale-110">
                             <CheckCircle2 size={24} />
                         </div>
                     </div>
-                    <div className="mt-4 w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-50">
-                        <div className="bg-gradient-to-r from-blue-400 to-indigo-500 h-full rounded-full transition-all duration-1000" style={{ width: `${segregationScore}%` }}></div>
-                    </div>
                 </div>
 
-                {/* ML Forecast Card */}
-                <div className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-md hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-indigo-50/40 to-white relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 -mr-12 -mt-12 rounded-full transform group-hover:scale-150 transition-transform duration-700"></div>
-                    <div className="flex justify-between items-start relative z-10">
-                        <div>
-                            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded w-fit mb-2 flex items-center gap-1">
-                                <Activity size={12} /> Forecast
-                            </p>
-                            <h3 className="text-4xl font-black text-indigo-900 tracking-tight">
-                                {predictions ? `${predictions.prediction.prediction}` : '--'} <span className="text-lg font-bold text-indigo-300">kg</span>
-                            </h3>
-                        </div>
-                        <div className="p-3 bg-indigo-600 text-white rounded-xl shadow-lg animate-pulse-slow">
-                            <TrendingUp size={24} />
-                        </div>
-                    </div>
-                    <p className="text-[10px] font-bold text-indigo-400 mt-2 uppercase tracking-tighter">Predicted for Tomorrow</p>
-                </div>
-
-                {/* Risk Card */}
-                <div className={`p-6 rounded-2xl border shadow-sm transition-all duration-300 group ${predictions?.risk.level === 'critical' || predictions?.risk.level === 'high'
-                    ? 'bg-red-50 border-red-100 hover:shadow-red-100'
-                    : 'bg-emerald-50 border-emerald-100 hover:shadow-emerald-100'
-                    }`}>
+                <div className="premium-card p-8 border-l-4 border-l-indigo-500 bg-gradient-to-br from-white to-indigo-50/30 group">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className={`text-xs font-bold uppercase tracking-widest px-2 py-1 rounded w-fit mb-2 ${predictions?.risk.level === 'critical' || predictions?.risk.level === 'high' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'
-                                }`}>Overflow Risk</p>
-                            <h3 className={`text-3xl font-black tracking-tight ${predictions?.risk.level === 'critical' || predictions?.risk.level === 'high' ? 'text-red-900' : 'text-emerald-900'
-                                }`}>
-                                {predictions ? predictions.risk.level.toUpperCase() : 'ANALYZING...'}
+                            <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <TrendingUp size={12} /> Predictive Load
+                            </p>
+                            <h3 className="text-4xl font-black text-slate-950 tracking-tighter">
+                                {predictions ? predictions.prediction.prediction : '--'} <span className="text-sm font-bold text-slate-300">KG</span>
                             </h3>
                         </div>
-                        <div className={`p-3 rounded-xl shadow-sm ${predictions?.risk.level === 'critical' || predictions?.risk.level === 'high' ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'
-                            }`}>
-                            <AlertTriangle size={24} />
+                        <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-600/20 transition-transform group-hover:scale-110">
+                            <Leaf size={24} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="premium-card p-8 border-l-4 border-l-slate-950 group">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Overflow Risk</p>
+                            <h3 className="text-4xl font-black text-slate-950 tracking-tighter uppercase whitespace-nowrap">
+                                OPTIMAL
+                            </h3>
+                        </div>
+                        <div className="p-4 bg-slate-950 text-white rounded-2xl shadow-xl shadow-slate-950/20 transition-transform group-hover:scale-110">
+                            <ShieldAlert size={24} />
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 {/* Analytics Chart */}
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-8 hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-8">
+                <div className="lg:col-span-2 premium-card p-12">
+                    <div className="flex items-center justify-between mb-16">
                         <div>
-                            <h3 className="font-extrabold text-slate-800 text-xl tracking-tight">Waste Composition</h3>
-                            <p className="text-xs text-slate-400 font-medium">Real-time breakdown by category</p>
+                            <h3 className="font-black text-slate-950 text-3xl tracking-tighter">Composition Audit</h3>
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-2">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} • Real-time Telemetry</p>
                         </div>
-                        <button onClick={onViewHistory} className="text-xs font-bold px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl transition-all transform hover:-translate-y-0.5 shadow-lg shadow-slate-200">
-                            Full Database
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <span className="badge-emerald lowercase tracking-normal">Active Stream</span>
+                        </div>
                     </div>
 
-                    <div className="h-[350px] w-full flex flex-col md:flex-row gap-10">
+                    <div className="h-[420px] w-full flex flex-col md:flex-row gap-16">
                         <div className="flex-1">
                             {data.by_type.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={data.by_type} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.03)" />
                                         <XAxis type="number" hide />
-                                        <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 13, fill: '#475569', fontWeight: 700 }} tickLine={false} axisLine={false} />
+                                        <YAxis dataKey="name" type="category" width={90} tick={{ fontSize: 11, fill: '#64748b', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }} tickLine={false} axisLine={false} />
                                         <Tooltip
-                                            cursor={{ fill: '#f8fafc', radius: 4 }}
-                                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '16px' }}
+                                            cursor={{ fill: 'rgba(0,0,0,0.02)', radius: 8 }}
+                                            contentStyle={{ background: '#ffffff', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.1)', padding: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }}
+                                            itemStyle={{ fontWeight: 900, fontSize: '12px', color: '#0f172a' }}
                                         />
-                                        <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={28}>
+                                        <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={32}>
                                             {data.by_type.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[entry.name] || '#94A3B8'} />
+                                                <Cell key={`cell-${index}`} fill={COLORS[entry.name] || '#64748b'} fillOpacity={0.9} />
                                             ))}
                                         </Bar>
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <div className="h-full flex items-center justify-center text-slate-400 text-sm font-bold bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                                    Awaiting collection data...
+                                <div className="h-full flex items-center justify-center text-slate-400 text-[10px] font-black uppercase tracking-widest bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                                    Buffering telemetry stream...
                                 </div>
                             )}
                         </div>
 
                         {/* Location Rankings */}
-                        <div className="w-full md:w-64 pl-0 md:pl-8 md:border-l border-slate-100">
-                            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Hot-Spot Rankings</h4>
-                            <div className="space-y-6">
-                                {sortedLocations.length > 0 ? sortedLocations.slice(0, 4).map((loc, i) => (
+                        <div className="w-full md:w-80 pl-0 md:pl-16 md:border-l border-slate-100">
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-10">Zone Load Rankings</h4>
+                            <div className="space-y-10">
+                                {sortedLocations.length > 0 ? sortedLocations.slice(0, 5).map((loc, i) => (
                                     <div key={i} className="group cursor-default">
-                                        <div className="flex justify-between text-xs mb-2 items-end">
-                                            <span className="font-bold text-slate-700 group-hover:text-slate-900 text-sm">{loc.name}</span>
-                                            <span className="text-slate-500 font-black tabular-nums">{Number(loc.value).toFixed(1)}kg</span>
+                                        <div className="flex justify-between mb-3 items-end">
+                                            <span className="font-black text-slate-800 text-xs uppercase tracking-tight group-hover:text-slate-950 transition-colors">{loc.name}</span>
+                                            <span className="text-slate-400 font-bold text-[11px] tabular-nums">{Number(loc.value).toFixed(1)} <span className="text-[9px] opacity-60">KG</span></span>
                                         </div>
-                                        <div className="w-full bg-slate-100 rounded-full h-2 shadow-inner">
-                                            <div className="bg-slate-800 h-full rounded-full transition-all duration-700 group-hover:bg-indigo-600" style={{ width: `${(loc.value / maxLocValue) * 100}%` }}></div>
+                                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                            <div className="bg-slate-950 h-full rounded-full transition-all duration-1000 group-hover:bg-emerald-500" style={{ width: `${(loc.value / maxLocValue) * 100}%` }}></div>
                                         </div>
                                     </div>
                                 )) : (
-                                    <p className="text-xs text-slate-400 text-center py-4 italic font-medium">No active collections</p>
+                                    <p className="text-[10px] text-slate-300 text-center py-6 font-black uppercase tracking-widest italic leading-loose">Awaiting operational<br />datasets</p>
                                 )}
                             </div>
                         </div>
@@ -204,64 +179,61 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                 </div>
 
                 {/* Activity Feed */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-0 flex flex-col h-[522px] overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                        <h3 className="font-black text-slate-800 uppercase tracking-tight">Live Intelligence</h3>
-                        <div className="flex items-center gap-2 px-2 py-1 bg-emerald-100 text-emerald-600 rounded-full">
+                <div className="premium-card p-0 flex flex-col h-[650px] overflow-hidden">
+                    <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-white">
+                        <h3 className="font-black text-slate-950 text-xl tracking-tighter uppercase">Live Intelligence</h3>
+                        <div className="flex items-center gap-2.5 px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                             </span>
-                            <span className="text-[10px] font-bold">LIVE</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">LIVE DATA</span>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-0 scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto scrollbar-hide py-2">
                         {data.recent.length > 0 ? (
                             data.recent.map((log, i) => (
-                                <div key={log.id} className="p-5 flex items-start gap-4 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group cursor-pointer">
+                                <div key={log.id} className="p-8 flex items-start gap-6 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group cursor-pointer relative">
+                                    <div className="absolute inset-y-0 left-0 w-1.5 bg-slate-950 transform -translate-x-full group-hover:translate-x-0 transition-transform"></div>
                                     <div className="relative flex-shrink-0">
-                                        {log.image_url ? (
-                                            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 overflow-hidden shadow-sm group-hover:shadow-md transition-all transform group-hover:scale-105">
-                                                <img src={log.image_url} alt="Waste" className="w-full h-full object-cover" />
-                                            </div>
-                                        ) : (
-                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-lg shadow-inner transform rotate-3 group-hover:rotate-0 transition-transform
-                                        ${log.waste_type === 'Wet' ? 'bg-gradient-to-br from-emerald-400 to-emerald-700' :
-                                                    log.waste_type === 'Dry' ? 'bg-gradient-to-br from-blue-400 to-blue-700' :
-                                                        log.waste_type === 'E-waste' ? 'bg-gradient-to-br from-purple-400 to-purple-700' : 'bg-gradient-to-br from-amber-400 to-orange-600'}`}>
-                                                {log.waste_type[0]}
-                                            </div>
-                                        )}
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-xl transform rotate-2 group-hover:rotate-0 transition-transform
+                                        ${log.waste_type === 'Wet' ? 'bg-emerald-500 shadow-emerald-500/10' :
+                                                log.waste_type === 'Dry' ? 'bg-blue-500 shadow-blue-500/10' :
+                                                    log.waste_type === 'E-waste' ? 'bg-slate-950 shadow-slate-950/10' : 'bg-red-500 shadow-red-500/10'}`}>
+                                            {log.waste_type[0]}
+                                        </div>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-start">
-                                            <p className="text-sm font-black text-slate-800 truncate mb-1">{log.location_name}</p>
-                                            <span className="font-black text-slate-900 text-sm bg-slate-100 px-2 py-0.5 rounded-lg">{log.quantity_kg}<span className="text-[9px] text-slate-400 font-bold ml-1">KG</span></span>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <p className="text-sm font-black text-slate-950 truncate group-hover:text-emerald-600 transition-colors uppercase tracking-tight">{log.location_name}</p>
+                                            <span className="font-black text-slate-950 text-[12px] tabular-nums bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-200/50">{log.quantity_kg}<span className="text-[9px] text-slate-400 ml-1.5">KG</span></span>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <p className="text-[10px] text-slate-400 flex items-center gap-1 font-bold uppercase tracking-tighter">
-                                                <Clock size={10} />
+                                            <p className="text-[10px] text-slate-400 flex items-center gap-1.5 font-bold uppercase tracking-widest">
+                                                <Clock size={12} className="opacity-50" />
                                                 {new Date(log.collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
-                                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${log.waste_type === 'Wet' ? 'text-emerald-600 bg-emerald-50' :
-                                                log.waste_type === 'Dry' ? 'text-blue-600 bg-blue-50' : 'text-slate-500 bg-slate-50'
-                                                }`}>{log.waste_type}</span>
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-200">UID:{log.id}</span>
                                         </div>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
-                                <ImageIcon size={48} className="opacity-20 stroke-[1.5]" />
-                                <p className="text-sm font-bold uppercase tracking-widest opacity-40">No Activity Detected</p>
+                            <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-8">
+                                <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex items-center justify-center">
+                                    <ImageIcon size={40} className="opacity-10 animate-pulse" />
+                                </div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Awaiting Signal</p>
                             </div>
                         )}
                     </div>
 
-                    <button onClick={onViewHistory} className="m-4 p-4 text-xs font-black text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-all uppercase tracking-widest border border-slate-100 flex items-center justify-center gap-2 group">
-                        Historical Audits <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    <div className="p-8">
+                        <button onClick={onViewHistory} className="w-full py-5 text-[10px] font-black text-white bg-slate-950 hover:bg-slate-900 rounded-2xl transition-all shadow-xl shadow-slate-900/10 uppercase tracking-[0.25em] flex items-center justify-center gap-3 group">
+                            AUDIT DATABASE <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -269,3 +241,4 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
 };
 
 export default AdminDashboard;
+

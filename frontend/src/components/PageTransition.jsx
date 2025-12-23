@@ -10,16 +10,16 @@ const PageTransition = ({ children, activeKey }) => {
             const timer = setTimeout(() => {
                 setDisplayChildren(children);
                 setTransitionStage('fadeIn');
-            }, 250); // Matches transition duration
+            }, 300); // Snappy transition
             return () => clearTimeout(timer);
         }
     }, [children, activeKey]);
 
     return (
         <div
-            className={`transition-all duration-300 transform-gpu ${transitionStage === 'fadeIn'
-                    ? 'opacity-100 translate-y-0'
-                    : 'opacity-0 translate-y-4'
+            className={`transition-all duration-500 transform-gpu ${transitionStage === 'fadeIn'
+                ? 'animate-slideUp opacity-100'
+                : 'opacity-0 -translate-y-4 blur-sm'
                 }`}
         >
             {displayChildren}

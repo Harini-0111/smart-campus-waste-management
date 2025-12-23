@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { UserCircle, ArrowRight, Lock, Loader2, LayoutGrid } from 'lucide-react';
+import { ArrowRight, Lock, Loader2, UserCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Logo from './Logo';
 
 const Login = () => {
     const { login } = useAuth();
@@ -14,43 +15,60 @@ const Login = () => {
         setError('');
         setLoading(true);
 
-        const result = await login(username, password);
-
-        if (!result.success) {
-            setError(result.error);
+        try {
+            const result = await login(username, password);
+            if (!result.success) {
+                // Granular Error States
+                if (result.error.includes('401')) {
+                    setError('INVALID CREDENTIALS: Access Denied.');
+                } else if (result.error.includes('403')) {
+                    setError('ACCOUNT RESTRICTED: Contact Administrator.');
+                } else if (result.error.includes('RoleMismatch')) {
+                    setError('ROLE MISMATCH: Unauthorized Segment.');
+                } else {
+                    setError(result.error || 'GATEWAY ERROR: Verification Aborted.');
+                }
+                setLoading(false);
+            }
+        } catch (err) {
+            setError('NETWORK ANOMALY: Connection Unstable.');
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
-            {/* Background Decorative Elements */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] -mr-48 -mt-48 animate-pulse-slow"></div>
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px] -ml-32 -mb-32"></div>
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
+            {/* Parallax Background Layers */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(15,23,42,0.03)_0%,transparent_50%)]"></div>
+            <div className="absolute top-[-20%] right-[-15%] w-[70%] h-[70%] bg-emerald-100/30 rounded-full blur-[140px] animate-blob"></div>
+            <div className="absolute bottom-[-20%] left-[-15%] w-[70%] h-[70%] bg-slate-200/50 rounded-full blur-[140px] animate-blob animation-delay-2000"></div>
+            <div className="absolute top-[20%] left-[10%] w-[30%] h-[30%] bg-blue-100/20 rounded-full blur-[100px] animate-pulse-slow"></div>
 
             <div className="w-full max-w-md relative z-10">
-                {/* Logo Section */}
-                <div className="text-center mb-10 animate-fadeIn">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-500 rounded-3xl shadow-2xl shadow-emerald-500/20 mb-6 rotate-3 hover:rotate-0 transition-transform duration-500">
-                        <LayoutGrid size={40} className="text-white" />
+                {/* Logo & Header */}
+                <div className="text-center mb-16 animate-fadeIn">
+                    <div className="flex justify-center mb-8">
+                        <div className="p-8 bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-emerald-500/10 transition-all hover:scale-110 duration-700 animate-float glow-on-hover">
+                            <Logo size={84} />
+                        </div>
                     </div>
-                    <h1 className="text-5xl font-black text-white tracking-tighter mb-2">EcoCampus</h1>
-                    <div className="h-1.5 w-16 bg-emerald-500 mx-auto rounded-full mb-4"></div>
-                    <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Smart Waste Intelligence</p>
+                    <h1 className="text-7xl font-black text-slate-950 tracking-[-0.06em] mb-4 leading-none text-gradient">EcoCampus</h1>
+                    <p className="text-slate-400 font-bold uppercase tracking-[0.5em] text-[10px] animate-pulse-slow opacity-80">Autonomous Sustainability Network</p>
                 </div>
 
-                {/* Card Section */}
-                <div className="bg-slate-900/50 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl border border-white/5 p-10 animate-slideUp">
-                    <form onSubmit={handleSubmit} className="space-y-8">
-                        <div className="space-y-6">
-                            <div className="relative group">
-                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">Access ID</label>
+                {/* Login Card with Glow Reveal */}
+                <div className="glass-panel p-12 rounded-[3.5rem] animate-glow-reveal scale-100 hover:scale-[1.02] transition-all duration-700 group/card">
+                    <form onSubmit={handleSubmit} className="space-y-10">
+                        <div className="space-y-8">
+                            <div className="relative group focus-glow rounded-2xl">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4 ml-2">Access Handle</label>
                                 <div className="relative">
-                                    <UserCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                                    <UserCircle className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-all duration-500" size={24} />
                                     <input
                                         type="text"
                                         required
-                                        className="w-full bg-slate-800/50 border border-slate-700/50 text-white p-4 pl-12 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50 outline-none transition-all placeholder:text-slate-600 font-medium"
+                                        autoComplete="username"
+                                        className="input-field pl-16 py-6 border-slate-200/50 bg-white/50 backdrop-blur-sm focus:bg-white"
                                         placeholder="Username"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
@@ -58,14 +76,15 @@ const Login = () => {
                                 </div>
                             </div>
 
-                            <div className="relative group">
-                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">Secure PIN</label>
+                            <div className="relative group focus-glow rounded-2xl">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4 ml-2">Security Hash</label>
                                 <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-all duration-500" size={24} />
                                     <input
                                         type="password"
                                         required
-                                        className="w-full bg-slate-800/50 border border-slate-700/50 text-white p-4 pl-12 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50 outline-none transition-all placeholder:text-slate-600 font-medium"
+                                        autoComplete="current-password"
+                                        className="input-field pl-16 py-6 border-slate-200/50 bg-white/50 backdrop-blur-sm focus:bg-white"
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
@@ -75,7 +94,8 @@ const Login = () => {
                         </div>
 
                         {error && (
-                            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest rounded-xl text-center">
+                            <div className="p-6 bg-red-50/80 backdrop-blur-sm border-l-4 border-red-500 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-r-2xl animate-shake flex items-center gap-4 shadow-sm">
+                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                                 {error}
                             </div>
                         )}
@@ -83,36 +103,41 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl transition-all shadow-2xl shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95 group"
+                            className="btn-primary w-full py-7 group relative overflow-hidden rounded-[2rem]"
                         >
-                            {loading ? <Loader2 className="animate-spin" size={20} /> : (
-                                <>
-                                    ENTER DASHBOARD
-                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                </>
-                            )}
+                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-emerald-400 translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-out"></div>
+                            <div className="relative z-10 flex items-center justify-center gap-6">
+                                {loading ? <Loader2 className="animate-spin text-white" size={24} /> : (
+                                    <>
+                                        <span className="text-[13px] font-black uppercase tracking-[0.4em]">Initialize Session</span>
+                                        <ArrowRight size={22} className="group-hover:translate-x-3 transition-transform duration-500" />
+                                    </>
+                                )}
+                            </div>
                         </button>
                     </form>
                 </div>
-
-                {/* Footer Credentials */}
-                <div className="mt-10 grid grid-cols-2 gap-4 animate-fadeIn" style={{ animationDelay: '0.4s' }}>
-                    <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5 hover:bg-white/10 transition-all cursor-default group">
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 group-hover:text-emerald-400 transition-colors">Admin Access</p>
-                        <p className="text-xs font-bold text-slate-300">admin / password123</p>
-                    </div>
-                    <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5 hover:bg-white/10 transition-all cursor-default group">
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 group-hover:text-blue-400 transition-colors">Student Access</p>
-                        <p className="text-xs font-bold text-slate-300">student1 / password123</p>
-                    </div>
-                </div>
             </div>
 
-            <p className="mt-12 text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] relative z-10 transition-colors hover:text-emerald-500 cursor-default">
-                Developed for Smart Campus Hackathon 2025
-            </p>
+            {/* Production Footer */}
+            <div className="mt-24 text-center animate-fadeIn opacity-30 hover:opacity-100 transition-opacity duration-1000" style={{ animationDelay: '1.2s' }}>
+                <div className="flex gap-12 justify-center items-center mb-8">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Autonomous</div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50"></div>
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Decentralized</div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50"></div>
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Sustainable</div>
+                </div>
+                <div className="flex gap-8 justify-center items-center">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]"></div>
+                    <div className="px-5 py-2 glass-panel rounded-full text-[9px] font-black text-slate-400 uppercase tracking-widest border-slate-200">Production Node v1.0.0_STABLE</div>
+                    <div className="w-2 h-2 rounded-full bg-slate-300"></div>
+                </div>
+            </div>
         </div>
     );
 };
 
+
 export default Login;
+

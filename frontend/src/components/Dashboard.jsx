@@ -10,19 +10,17 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
     const [data, setData] = useState({ total_today: 0, by_type: [], by_location: [], recent: [] });
     const [loading, setLoading] = useState(true);
 
-    // Simulated metrics
-    const segregationScore = 94;
     const yesterdayTotal = 120.5;
     const growth = data.total_today > 0 ? ((data.total_today - yesterdayTotal) / yesterdayTotal * 100) : 0;
     const growthIsPositive = growth >= 0;
 
     const fetchData = async () => {
         try {
-            const res = await axios.get('http://localhost:3001/api/v1/dashboard');
-            setTimeout(() => {
-                setData(res.data);
-                setLoading(false);
-            }, 600);
+            const res = await axios.get(`${API_URL}/dashboard`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            setData(res.data);
+            setLoading(false);
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
             setLoading(false);
@@ -88,7 +86,7 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                     <div className="mt-4 w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                         <div className="bg-blue-500 h-1.5 rounded-full shadow-lg shadow-blue-500/30" style={{ width: `${segregationScore}%` }}></div>
                     </div>
-                    <p className="text-xs text-slate-400 mt-2 font-medium">Top Performer: <strong>Science Block</strong></p>
+                    <p className="text-xs text-slate-400 mt-2 font-medium">Top Performer: <strong>Main Campus Zone</strong></p>
                 </div>
 
                 {/* Dominant Type */}
@@ -168,7 +166,7 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                             )}
                         </div>
 
-                        {/* Visual Location Breakdown (REAL DATA) */}
+                        {/* Visual Location Breakdown */}
                         <div className="w-full sm:w-56 pl-0 sm:pl-6 sm:border-l border-slate-100">
                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-5">By Collection Point</h4>
                             <div className="space-y-5">
@@ -227,7 +225,7 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                                             <Clock size={10} />
                                             {new Date(log.collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} •
                                             <span className={`font-semibold ${log.waste_type === 'Wet' ? 'text-emerald-600' :
-                                                    log.waste_type === 'Dry' ? 'text-blue-600' : 'text-slate-600'
+                                                log.waste_type === 'Dry' ? 'text-blue-600' : 'text-slate-600'
                                                 }`}>{log.waste_type}</span>
                                         </p>
                                     </div>

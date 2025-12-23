@@ -2,17 +2,16 @@ const db = require('./db');
 const bcrypt = require('bcrypt');
 
 async function seed() {
-    console.log('🌱 Seeding database...');
-
     try {
-        // Clear existing data (optional, but good for consistent state)
-        await db.query('DELETE FROM users');
-        await db.query('DELETE FROM waste_logs');
-        // Locations are constant? If we want to reset them we can, but init_db handles that.
+        console.log('--- Starting Production Seed ---');
 
-        const saltRounds = 10;
-        const password = 'password123'; // Default password for all
-        const hash = await bcrypt.hash(password, saltRounds);
+        // Clear existing data (Order matters for foreign keys)
+        await db.query('DELETE FROM tasks');
+        await db.query('DELETE FROM waste_logs');
+        await db.query('DELETE FROM users');
+        // Locations are seeded in init_db, but let's ensure they exist
+
+        const hash = await bcrypt.hash('password123', 10);
 
         // 1. Super Admin
         await db.query(
@@ -20,55 +19,50 @@ async function seed() {
             ['admin', hash]
         );
 
-        // 2. Block Admin (Hostel)
+        // 2. Block Admins (Supervisor)
         await db.query(
-            `INSERT INTO users (username, password_hash, role, location_id) VALUES ($1, $2, 'block_admin', 'LOC001')`,
-            ['hostel_admin', hash]
+            `INSERT INTO users (username, password_hash, role, location_id) VALUES ($1, $2, 'block_admin', 'HOSTEL_A')`,
+            ['supervisor1', hash]
+        );
+        await db.query(
+            `INSERT INTO users (username, password_hash, role, location_id) VALUES ($1, $2, 'block_admin', 'CANTEEN_MAIN')`,
+            ['supervisor2', hash]
         );
 
-        // 3. Student
+        // 3. Staff (Cleaning Crew)
         await db.query(
-            `INSERT INTO users (username, password_hash, role) VALUES ($1, $2, 'student')`,
+            `INSERT INTO users (username, password_hash, role, location_id) VALUES ($1, $2, 'staff', 'HOSTEL_A')`,
+            ['staff1', hash]
+        );
+        await db.query(
+            `INSERT INTO users (username, password_hash, role, location_id) VALUES ($1, $2, 'staff', 'CANTEEN_MAIN')`,
+            ['staff2', hash]
+        );
+
+        // 4. Students/Users
+        await db.query(
+            `INSERT INTO users (username, password_hash, role, impact_points, eco_level) VALUES ($1, $2, 'student', 1542, 4)`,
             ['student1', hash]
         );
 
-        // 4. Staff
-        await db.query(
-            `INSERT INTO users (username, password_hash, role) VALUES ($1, $2, 'staff')`,
-            ['staff1', hash]
-        );
+        // 5. Initial Waste Logs
+        const logs = [
+            ['CANTEEN_MAIN', 'Wet', 45.5, 'Normal', 'Main canteen lunch rush waste'],
+            ['HOSTEL_A', 'Dry', 12.0, 'Low', 'Cardboard boxes in lounge'],
+            ['ADMIN_MAIN', 'Hazardous', 2.5, 'High', 'Old batteries found in storage']
+        ];
 
-        console.log('✅ Users seeded successfully!');
-        console.log('Credentials (username / password):');
-        console.log(' - admin / password123');
-        console.log(' - hostel_admin / password123');
-        console.log(' - staff1 / password123');
-        console.log(' - student1 / password123');
-
-        // Seed some sample waste logs
-        const locations = ['LOC001', 'LOC002', 'LOC003', 'LOC004'];
-        const types = ['Wet', 'Dry', 'Recyclable', 'Hazardous'];
-
-        for (let i = 0; i < 15; i++) {
-            const loc = locations[Math.floor(Math.random() * locations.length)];
-            const type = types[Math.floor(Math.random() * types.length)];
-            const qty = (Math.random() * 15 + 1).toFixed(2);
-
-            // Random date in last 7 days
-            const daysAgo = Math.floor(Math.random() * 7);
-            const date = new Date();
-            date.setDate(date.getDate() - daysAgo);
-
+        for (const [loc, type, qty, severity, desc] of logs) {
             await db.query(
-                'INSERT INTO waste_logs (location_id, waste_type, quantity_kg, collected_at) VALUES ($1, $2, $3, $4)',
-                [loc, type, qty, date]
+                `INSERT INTO waste_logs (location_id, waste_type, quantity_kg, severity, description) VALUES ($1, $2, $3, $4, $5)`,
+                [loc, type, qty, severity, desc]
             );
         }
 
-        console.log('✅ Sample waste logs seeded.');
+        console.log('✅ Database seeded successfully with production-grade accounts.');
         process.exit(0);
     } catch (err) {
-        console.error('❌ Error seeding:', err);
+        console.error('❌ Seeding failed:', err);
         process.exit(1);
     }
 }
