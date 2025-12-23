@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { authenticateToken, authorizeRoles } = require('../middleware/authMiddleware');
 
+// Public routes (if any) - Locations might be public? Let's make it public for dropdowns
 // GET /api/v1/locations
 router.get('/locations', async (req, res) => {
     try {
@@ -13,9 +15,9 @@ router.get('/locations', async (req, res) => {
     }
 });
 
-// POST /api/v1/waste
-router.post('/waste', async (req, res) => {
-    const { location_id, waste_type, quantity_kg, image_url } = req.body;
+// POST /api/v1/waste - Authenticated Users only
+router.post('/waste', authenticateToken, async (req, res) => {
+    const { location_id, waste_type, quantity_kg, image_url, description } = req.body;
     console.log('Received payload:', req.body); // Debug log
 
     if (!location_id || !waste_type || !quantity_kg) {
@@ -24,8 +26,8 @@ router.post('/waste', async (req, res) => {
 
     try {
         const result = await db.query(
-            'INSERT INTO waste_logs (location_id, waste_type, quantity_kg, image_url, collected_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
-            [location_id, waste_type, quantity_kg, image_url || null]
+            'INSERT INTO waste_logs (location_id, waste_type, quantity_kg, image_url, description, collected_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
+            [location_id, waste_type, quantity_kg, image_url || null, description || null]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
@@ -34,8 +36,8 @@ router.post('/waste', async (req, res) => {
     }
 });
 
-// GET /api/v1/dashboard
-router.get('/dashboard', async (req, res) => {
+// GET /api/v1/dashboard - Admin only
+router.get('/dashboard', authenticateToken, authorizeRoles('admin', 'block_admin'), async (req, res) => {
     try {
         const totalToday = await db.query(
             'SELECT COALESCE(SUM(quantity_kg), 0) as total FROM waste_logs WHERE DATE(collected_at) = CURRENT_DATE'
@@ -66,8 +68,8 @@ router.get('/dashboard', async (req, res) => {
 });
 
 
-// GET /api/v1/history
-router.get('/history', async (req, res) => {
+// GET /api/v1/history - Authenticated Users
+router.get('/history', authenticateToken, async (req, res) => {
     try {
         const result = await db.query(
             'SELECT w.*, l.name as location_name FROM waste_logs w LEFT JOIN locations l ON w.location_id = l.id ORDER BY collected_at DESC'

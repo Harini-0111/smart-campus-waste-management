@@ -5,10 +5,16 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const wasteRoutes = require('./routes/wasteRoutes');
+const authRoutes = require('./routes/authRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
+const taskRoutes = require('./routes/taskRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads')); // Serve uploaded images
 
 // Logging Middleware
 app.use((req, res, next) => {
@@ -17,6 +23,11 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/api/v1/upload', uploadRoutes);
+app.use('/api/v1/tasks', taskRoutes);
+app.use('/api/v1/users', userRoutes);
 app.use('/api/v1', wasteRoutes);
 
 // Root route for sanity check

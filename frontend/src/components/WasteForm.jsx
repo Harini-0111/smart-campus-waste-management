@@ -1,21 +1,19 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Send, CheckCircle2, AlertCircle, ChevronDown, Package, Camera, X } from 'lucide-react';
+import { API_URL } from '../config';
+import { useNotification } from './NotificationSystem';
 
 const WasteForm = ({ onEntryAdded }) => {
-    const [formData, setFormData] = useState({
-        location_id: '',
-        waste_type: 'Dry',
-        quantity_kg: '',
-        image_url: ''
-    });
+    const { notify } = useNotification();
     const [locations, setLocations] = useState([]);
+    const [formData, setFormData] = useState({ location_id: '', waste_type: 'Dry', quantity_kg: '', image_url: '', description: '' });
     const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState(false);
     const [preview, setPreview] = useState(null);
+    const [file, setFile] = useState(null);
 
     useEffect(() => {
-        axios.get('http://localhost:3001/api/v1/locations')
+        axios.get(`${API_URL}/locations`)
             .then(res => setLocations(res.data))
             .catch(err => console.error("Failed to load locations", err));
     }, []);
@@ -39,23 +37,17 @@ const WasteForm = ({ onEntryAdded }) => {
         }
     ];
 
-    // Simulator for Image Upload
     const handleImageSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // In a real app, we'd upload 'file'. 
-            // For this polished demo, we'll show a local preview immediately, 
-            // but send a High-Quality Stock URL to the backend so it looks great on the dashboard.
-            const localPreview = URL.createObjectURL(file);
-            setPreview(localPreview);
-
-            const selectedType = wasteTypes.find(t => t.id === formData.waste_type) || wasteTypes[0];
-            setFormData({ ...formData, image_url: selectedType.mockImg });
+            setFile(file);
+            setPreview(URL.createObjectURL(file));
         }
     };
 
     const removeImage = () => {
         setPreview(null);
+        setFile(null);
         setFormData({ ...formData, image_url: '' });
     };
 
@@ -65,14 +57,30 @@ const WasteForm = ({ onEntryAdded }) => {
 
         setLoading(true);
         try {
-            await axios.post('http://localhost:3001/api/v1/waste', formData);
-            setSuccess(true);
-            setFormData({ location_id: '', waste_type: 'Dry', quantity_kg: '', image_url: '' });
+            const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+            let finalImageUrl = formData.image_url;
+
+            if (file) {
+                const uploadData = new FormData();
+                uploadData.append('image', file);
+                const uploadRes = await axios.post(`${API_URL}/upload`, uploadData, {
+                    headers: { ...headers, 'Content-Type': 'multipart/form-data' }
+                });
+                finalImageUrl = uploadRes.data.imageUrl;
+            }
+
+            await axios.post(`${API_URL}/waste`, { ...formData, image_url: finalImageUrl }, {
+                headers
+            });
+
+            notify("Collection Protocol Successfully Recorded", "success");
+            setFormData({ location_id: '', waste_type: 'Dry', quantity_kg: '', image_url: '', description: '' });
             setPreview(null);
+            setFile(null);
             if (onEntryAdded) onEntryAdded();
-            setTimeout(() => setSuccess(false), 3000);
         } catch (error) {
             console.error('Error submitting form:', error);
+            notify("Submission Failed. Check telemetry logs.", "critical");
         } finally {
             setLoading(false);
         }
@@ -80,64 +88,54 @@ const WasteForm = ({ onEntryAdded }) => {
 
     return (
         <div className="max-w-xl mx-auto animate-slideUp">
-            <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-200 overflow-hidden ring-1 ring-slate-900/5">
-                <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-200 overflow-hidden ring-1 ring-slate-900/5">
+                <div className="px-10 py-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                     <div>
-                        <h2 className="font-bold text-lg text-slate-900">Log Collection</h2>
-                        <p className="text-xs text-slate-500">Enter waste details below</p>
+                        <h2 className="font-black text-2xl text-slate-900 tracking-tight">Log Directive</h2>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Operational Entry Gateway</p>
                     </div>
-                    <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm text-emerald-600">
-                        <Package size={20} />
+                    <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-emerald-500">
+                        <Package size={24} />
                     </div>
                 </div>
 
-                {success && (
-                    <div className="px-8 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center gap-3 animate-fadeIn">
-                        <div className="bg-emerald-100 p-1 rounded-full"><CheckCircle2 className="text-emerald-600" size={16} /></div>
-                        <div>
-                            <p className="text-sm font-bold text-emerald-800">Successfully Recorded</p>
-                            <p className="text-xs text-emerald-600 leading-none mt-0.5">The dashboard stats have been updated.</p>
-                        </div>
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="p-8 space-y-6">
-
+                <form onSubmit={handleSubmit} className="p-10 space-y-8">
                     {/* Location */}
-                    <div className="space-y-2">
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Source Location <span className="text-red-500">*</span></label>
+                    <div className="space-y-3">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vector Node <span className="text-red-500">*</span></label>
                         <div className="relative group">
                             <select
                                 required
-                                className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none appearance-none transition-all text-slate-800 font-medium hover:bg-white"
+                                className="w-full pl-6 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none appearance-none transition-all text-slate-800 font-bold hover:bg-white"
                                 value={formData.location_id}
                                 onChange={(e) => setFormData({ ...formData, location_id: e.target.value })}
                             >
-                                <option value="">Select a location...</option>
+                                <option value="">Select deployment sector...</option>
                                 {locations.map(loc => (
                                     <option key={loc.id} value={loc.id}>{loc.name}</option>
                                 ))}
                             </select>
-                            <ChevronDown className="absolute right-4 top-3.5 text-slate-400 pointer-events-none group-hover:text-slate-600 transition-colors" size={16} />
+                            <ChevronDown className="absolute right-6 top-5 text-slate-400 pointer-events-none group-hover:text-slate-600 transition-colors" size={18} />
                         </div>
                     </div>
 
                     {/* Waste Type */}
-                    <div className="space-y-2">
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Waste Category <span className="text-red-500">*</span></label>
-                        <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-3">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Waste Classification <span className="text-red-500">*</span></label>
+                        <div className="grid grid-cols-2 gap-4">
                             {wasteTypes.map(type => (
                                 <div
                                     key={type.id}
                                     onClick={() => setFormData({ ...formData, waste_type: type.id })}
-                                    className={`cursor-pointer p-3 rounded-xl border transition-all flex items-center gap-3 hover:shadow-md ${formData.waste_type === type.id
-                                            ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500'
-                                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                                    className={`cursor-pointer p-5 rounded-2xl border transition-all flex items-center gap-4 hover:shadow-xl ${formData.waste_type === type.id
+                                        ? 'border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20'
+                                        : 'border-slate-100 hover:border-slate-200 bg-white'
                                         }`}
                                 >
-                                    <div className={`w-3 h-3 rounded-full ${type.color} shadow-sm`} />
+                                    <div className={`w-4 h-4 rounded-full ${type.color} shadow-lg`} />
                                     <div>
-                                        <h3 className={`text-sm font-bold ${formData.waste_type === type.id ? 'text-slate-900' : 'text-slate-700'}`}>{type.label}</h3>
+                                        <h3 className={`text-sm font-black tracking-tight ${formData.waste_type === type.id ? 'text-slate-900' : 'text-slate-500'}`}>{type.label}</h3>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter leading-none mt-1">{type.desc.split(',')[0]}</p>
                                     </div>
                                 </div>
                             ))}
@@ -145,9 +143,9 @@ const WasteForm = ({ onEntryAdded }) => {
                     </div>
 
                     {/* Quantity & Image Row */}
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Net Weight <span className="text-red-500">*</span></label>
+                    <div className="grid grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mass Magnitude <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <input
                                     type="number"
@@ -155,51 +153,62 @@ const WasteForm = ({ onEntryAdded }) => {
                                     required
                                     min="0.1"
                                     placeholder="0.00"
-                                    className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-slate-900 font-bold placeholder:text-slate-300 hover:bg-white"
+                                    className="w-full pl-6 pr-14 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-900 font-black tabular-nums text-lg placeholder:text-slate-200 hover:bg-white"
                                     value={formData.quantity_kg}
                                     onChange={(e) => setFormData({ ...formData, quantity_kg: e.target.value })}
                                 />
-                                <span className="absolute right-4 top-3.5 text-slate-400 text-xs font-bold">KG</span>
+                                <span className="absolute right-6 top-5 text-slate-400 text-[10px] font-black uppercase">KG</span>
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Photo Proof</label>
+                        <div className="space-y-3">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Visual Telemetry</label>
                             {!preview ? (
-                                <div className="relative w-full">
+                                <div className="relative w-full h-[60px]">
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={handleImageSelect}
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                     />
-                                    <div className="w-full py-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl flex items-center justify-center gap-2 text-slate-500 hover:bg-slate-100 transition-colors">
-                                        <Camera size={18} />
-                                        <span className="text-xs font-semibold">Upload</span>
+                                    <div className="w-full h-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center gap-3 text-slate-400 hover:bg-slate-100 hover:border-slate-300 transition-all group">
+                                        <Camera size={20} className="group-hover:scale-110 transition-transform" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Capture</span>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="relative group w-full h-[46px] rounded-xl overflow-hidden border border-slate-200">
+                                <div className="relative group w-full h-[60px] rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
                                     <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-                                    <button type="button" onClick={removeImage} className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white">
-                                        <X size={18} />
+                                    <button type="button" onClick={removeImage} className="absolute inset-0 bg-slate-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white backdrop-blur-[2px]">
+                                        <X size={20} />
                                     </button>
                                 </div>
                             )}
                         </div>
                     </div>
 
+                    {/* Description */}
+                    <div className="space-y-3">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Observational Notes</label>
+                        <textarea
+                            placeholder="Add details about the waste (e.g., specific bin location, odor, type details)..."
+                            className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800 font-bold placeholder:text-slate-200 hover:bg-white resize-none"
+                            rows="2"
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        ></textarea>
+                    </div>
+
                     {/* Action */}
-                    <div className="pt-4 border-t border-slate-100">
+                    <div className="pt-6">
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-4 text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-200 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                            className="w-full py-5 text-[10px] font-black uppercase tracking-[0.2em] bg-slate-900 hover:bg-slate-800 text-white rounded-[1.5rem] shadow-2xl shadow-slate-200 hover:-translate-y-1 transition-all flex items-center justify-center gap-4 disabled:opacity-50 disabled:transform-none"
                         >
-                            {loading ? 'Submitting Report...' : <>Submit Report <Send size={18} /></>}
+                            {loading ? 'Initializing Stream...' : <>Commit Log <Send size={18} /></>}
                         </button>
                     </div>
-
                 </form>
             </div>
         </div>
