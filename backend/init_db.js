@@ -20,14 +20,8 @@ CREATE TABLE IF NOT EXISTS waste_logs (
   quantity_kg DECIMAL(10, 2) NOT NULL,
   image_url TEXT,
   description TEXT,
+  status VARCHAR(20) DEFAULT 'Reported',
   collected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS segregation_metrics (
-  id SERIAL PRIMARY KEY,
-  log_id INTEGER REFERENCES waste_logs(id),
-  quality_score INTEGER CHECK (quality_score BETWEEN 1 AND 10),
-  notes TEXT
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -42,7 +36,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   id SERIAL PRIMARY KEY,
   waste_log_id INTEGER REFERENCES waste_logs(id),
   assigned_to INTEGER REFERENCES users(id),
-  status VARCHAR(20) DEFAULT 'Reported', -- Reported, Assigned, In Progress, Cleaned, Verified
+  status VARCHAR(20) DEFAULT 'Assigned', -- Assigned, In Progress, Cleaned, Verified
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -58,14 +52,14 @@ ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, type = EXCLUDED.type;
 `;
 
 async function init() {
-  try {
-    await db.query(schema);
-    console.log('Database initialized successfully with updated locations.');
-    process.exit(0);
-  } catch (err) {
-    console.error('Error initializing database:', err);
-    process.exit(1);
-  }
+    try {
+        await db.query(schema);
+        console.log('✅ Database initialized successfully.');
+        process.exit(0);
+    } catch (err) {
+        console.error('❌ Error initializing database:', err);
+        process.exit(1);
+    }
 }
 
 init();

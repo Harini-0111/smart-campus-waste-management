@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserCircle, ShieldCheck, ArrowRight, Lock, Loader2 } from 'lucide-react';
+import { UserCircle, ArrowRight, Lock, Loader2, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
