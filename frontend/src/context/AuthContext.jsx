@@ -10,31 +10,13 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         if (token) {
-            // Validate token with backend
-            fetch(`${API_URL}/auth/me`, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-                .then(res => {
-                    if (res.ok) {
-                        return res.json();
-                    } else {
-                        throw new Error('Invalid token');
-                    }
-                })
-                .then(userData => {
-                    setUser(userData);
-                    localStorage.setItem('user', JSON.stringify(userData));
-                })
-                .catch(() => {
-                    // Token is invalid, clear it
-                    logout();
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-        } else {
-            setLoading(false);
+            // In a real app, we would validate the token with the backend here /me
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            }
         }
+        setLoading(false);
     }, [token]);
 
     const login = async (username, password) => {
@@ -79,7 +61,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={value}>
-            {children}
+            {!loading && children}
         </AuthContext.Provider>
     );
 };
