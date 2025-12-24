@@ -10,8 +10,11 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     try {
+        console.log('Login attempt for username:', username);
         const result = await db.query('SELECT * FROM users WHERE username = $1', [username]);
+        console.log('Query returned', result.rows.length, 'rows');
         if (result.rows.length === 0) {
+            console.log('User not found in database');
             return res.status(401).json({ error: 'User not found' });
         }
 

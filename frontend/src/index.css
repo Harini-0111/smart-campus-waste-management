@@ -69,12 +69,6 @@
     animation: pulseSlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  .animate-shimmer {
-    background: linear-gradient(90deg, transparent 25%, rgba(255, 255, 255, 0.4) 50%, transparent 75%);
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite linear;
-  }
-
   .animation-delay-2000 {
     animation-delay: 2s;
   }
@@ -246,7 +240,7 @@
 }
 
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-950 via-slate-800 to-slate-950 bg-[length:200%_auto] animate-shimmer;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-950 via-slate-800 to-slate-950;
 }
 
 .badge-emerald {

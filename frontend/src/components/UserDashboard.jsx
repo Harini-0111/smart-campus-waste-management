@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { LayoutGrid, Leaf, Award, ArrowRight, History, Recycle } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import WasteForm from './WasteForm';
 
 const UserDashboard = () => {
     const { user } = useAuth();
