@@ -95,7 +95,7 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                         <div>
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Top Category</p>
                             <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight truncate">
-                                {data.by_type.length > 0 ? data.by_type.sort((a, b) => b.value - a.value)[0]?.name : '-'}
+                                {data?.by_type?.length > 0 ? [...data.by_type].sort((a, b) => b.value - a.value)[0]?.name : '-'}
                             </h3>
                         </div>
                         <div className="p-2.5 bg-gradient-to-br from-amber-50 to-amber-100 text-amber-600 rounded-lg shadow-sm">
@@ -103,7 +103,7 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                         </div>
                     </div>
                     <div className="mt-4 flex gap-2">
-                        {data.by_type.slice(0, 3).map((t, i) => (
+                        {data?.by_type?.slice(0, 3).map((t, i) => (
                             <div key={i} className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden">
                                 <div className="h-full rounded-full" style={{ width: '100%', backgroundColor: COLORS[t.name] || '#CBD5E1' }}></div>
                             </div>
@@ -140,9 +140,9 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                         </div>
                     </div>
 
-                    <div className="h-[300px] w-full flex flex-col sm:flex-row gap-6">
+                    <div className="h-[300px] w-full flex flex-col sm:sm-row gap-6">
                         <div className="flex-1">
-                            {data.by_type.length > 0 ? (
+                            {data?.by_type?.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={data.by_type} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E2E8F0" />
@@ -170,7 +170,7 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                         <div className="w-full sm:w-56 pl-0 sm:pl-6 sm:border-l border-slate-100">
                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-5">By Collection Point</h4>
                             <div className="space-y-5">
-                                {sortedLocations.length > 0 ? sortedLocations.map((loc, i) => (
+                                {sortedLocations?.length > 0 ? sortedLocations.map((loc, i) => (
                                     <div key={i}>
                                         <div className="flex justify-between text-xs mb-1.5">
                                             <span className="font-semibold text-slate-700 truncate max-w-[100px]" title={loc.name}>{loc.name}</span>
@@ -199,7 +199,7 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-0 scrollbar-thin scrollbar-thumb-slate-200">
-                        {data.recent.length > 0 ? (
+                        {data?.recent?.length > 0 ? (
                             data.recent.map((log, i) => (
                                 <div key={log.id} className="p-4 flex items-start gap-4 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 group">
                                     <div className="relative flex-shrink-0">

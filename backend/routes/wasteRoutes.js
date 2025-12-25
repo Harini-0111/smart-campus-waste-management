@@ -146,12 +146,14 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
             dashboardData = {
                 total_reports: parseInt(totalReports.rows[0].count),
                 total_kg: parseFloat(totalKg.rows[0].total),
+                total_today: parseFloat(totalKg.rows[0].total), // Map for stats card
                 by_type: byType.rows.map(r => ({
                     name: r.waste_type,
                     count: parseInt(r.count),
-                    total_kg: parseFloat(r.total_kg)
+                    value: parseFloat(r.total_kg) // Map for chart
                 })),
-                recent_reports: recentReports.rows
+                recent: recentReports.rows,
+                by_location: [] // Fallback for student
             };
 
         } else if (req.user.role === 'admin') {
