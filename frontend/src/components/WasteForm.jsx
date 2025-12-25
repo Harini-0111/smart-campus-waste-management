@@ -13,7 +13,9 @@ const WasteForm = ({ onEntryAdded }) => {
     const [file, setFile] = useState(null);
 
     useEffect(() => {
-        axios.get(`${API_URL}/locations`)
+        axios.get(`${API_URL}/locations`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        })
             .then(res => setLocations(res.data))
             .catch(err => console.error("Failed to load locations", err));
     }, []);

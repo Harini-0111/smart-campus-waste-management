@@ -24,23 +24,28 @@ const Register = ({ onSwitchToLogin }) => {
 
     useEffect(() => {
         // Fetch departments for dropdown
-        fetch(`${API_URL}/departments`)
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to load departments');
-                return res.json();
-            })
-            .then(data => {
+        const fetchDepts = async () => {
+            try {
+                const res = await fetch(`${API_URL}/departments`);
+                if (!res.ok) throw new Error('API unreachable');
+                const data = await res.json();
                 if (Array.isArray(data)) {
                     setDepartments(data);
-                } else {
-                    console.error('Expected array for departments, got:', data);
-                    setDepartments([]);
+                } else if (data && Array.isArray(data.rows)) {
+                    setDepartments(data.rows);
                 }
-            })
-            .catch(err => {
+            } catch (err) {
                 console.error('Failed to load departments:', err);
-                setDepartments([]); // Ensure it's never undefined/non-array
-            });
+                // Fallback hardcoded list for demo resilience
+                setDepartments([
+                    { id: 1, name: 'Computer Science & Engineering', code: 'CSE' },
+                    { id: 2, name: 'Electrical & Electronics Engineering', code: 'EEE' },
+                    { id: 3, name: 'Mechanical Engineering', code: 'MECH' },
+                    { id: 4, name: 'Civil Engineering', code: 'CIVIL' }
+                ]);
+            }
+        };
+        fetchDepts();
     }, []);
 
     const handleSendOTP = async (e) => {
@@ -307,9 +312,10 @@ const Register = ({ onSwitchToLogin }) => {
                                             className="input-field pl-12 py-4"
                                             value={formData.department_id}
                                             onChange={handleChange}
+                                            required={formData.role !== 'student'}
                                         >
                                             <option value="">Select Department</option>
-                                            {departments?.map(dept => (
+                                            {(departments || []).map(dept => (
                                                 <option key={dept.id} value={dept.id}>
                                                     {dept.name} ({dept.code})
                                                 </option>

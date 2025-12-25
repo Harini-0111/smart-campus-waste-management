@@ -110,6 +110,37 @@ router.get('/waste/my-reports', authenticateToken, authorizeRoles('student'), as
     }
 });
 
+// GET /api/v1/history - Unified history for both admins and students
+router.get('/history', authenticateToken, async (req, res) => {
+    try {
+        let query = `
+            SELECT w.*, u.full_name as student_name, u.username, d.name as location_name, d.code as department_code
+            FROM waste_logs w
+            JOIN users u ON w.student_id = u.id
+            JOIN departments d ON w.department_id = d.id
+        `;
+        let params = [];
+
+        if (req.user.role === 'student' || req.user.role === 'staff') {
+            query += ' WHERE w.student_id = $1';
+            params.push(req.user.id);
+        } else if (req.user.role === 'admin' || req.user.role === 'block_admin') {
+            if (req.user.department_id) {
+                query += ' WHERE w.department_id = $1';
+                params.push(req.user.department_id);
+            }
+        }
+
+        query += ' ORDER BY w.reported_at DESC';
+
+        const result = await db.query(query, params);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error fetching history:', err);
+        res.status(500).json({ error: 'Failed to fetch history data' });
+    }
+});
+
 // GET /api/v1/dashboard - Dashboard data based on role
 router.get('/dashboard', authenticateToken, async (req, res) => {
     try {

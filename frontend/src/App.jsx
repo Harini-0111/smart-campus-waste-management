@@ -51,15 +51,13 @@ function AppContent() {
               </div>
             </div>
 
-            {isAdmin && (
-              <nav className="hidden lg:flex items-center gap-1">
-                <NavButton active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={LayoutGrid} label="Insights" />
-                <NavButton active={activeTab === 'entry'} onClick={() => setActiveTab('entry')} icon={SquarePlus} label="Report" />
-                <NavButton active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} icon={Activity} label="Directives" />
-                <NavButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={HistoryIcon} label="Audit Log" />
-                <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={ChartBar} label="Intelligence" />
-              </nav>
-            )}
+            <nav className="hidden lg:flex items-center gap-1">
+              <NavButton active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={LayoutGrid} label="Insights" />
+              {isAdmin && <NavButton active={activeTab === 'entry'} onClick={() => setActiveTab('entry')} icon={SquarePlus} label="Report" />}
+              {isAdmin && <NavButton active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} icon={Activity} label="Directives" />}
+              <NavButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={HistoryIcon} label="Audit Log" />
+              {isAdmin && <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={ChartBar} label="Intelligence" />}
+            </nav>
           </div>
 
           <div className="flex items-center gap-8">
@@ -68,28 +66,34 @@ function AppContent() {
                 <span className="text-sm font-black text-slate-950 tracking-tight">{user?.username}</span>
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Global Secure Identity</span>
               </div>
-              <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-slate-950 font-black border border-slate-100 shadow-xl shadow-slate-200/30 relative group overflow-hidden">
+              <div
+                onClick={logout}
+                className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-slate-950 font-black border border-slate-100 shadow-xl shadow-slate-200/30 relative group overflow-hidden cursor-pointer hover:border-emerald-500/50 transition-all"
+                title="Quick Session Termination"
+              >
                 <div className="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors"></div>
                 <span className="relative z-10 text-xs tracking-tighter">{badgeLabel}</span>
               </div>
             </div>
 
-            <button onClick={logout} className="p-4 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group border border-transparent hover:border-red-100">
-              <LogOut size={22} />
+            <button
+              onClick={logout}
+              className="px-6 py-3 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group border border-transparent hover:border-red-100 flex items-center gap-3 font-black text-[10px] uppercase tracking-widest"
+            >
+              <LogOut size={18} />
+              <span>Sign Out</span>
             </button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        <PageTransition activeKey={role === 'staff' ? 'staff' : (!isAdmin ? 'user' : activeTab)}>
+        <PageTransition activeKey={role === 'staff' ? 'staff' : activeTab}>
           {role === 'staff' ? (
             <StaffDashboard />
-          ) : !isAdmin ? (
-            <UserDashboard />
           ) : (
             <>
-              {activeTab === 'dashboard' && <AdminDashboard refreshTrigger={refreshTrigger} onViewHistory={() => setActiveTab('history')} />}
+              {activeTab === 'dashboard' && (isAdmin ? <AdminDashboard refreshTrigger={refreshTrigger} onViewHistory={() => setActiveTab('history')} /> : <UserDashboard onOpenHistory={() => setActiveTab('history')} />)}
               {activeTab === 'entry' && <WasteForm onEntryAdded={handleEntryAdded} />}
               {activeTab === 'tasks' && <AdminTaskManager />}
               {activeTab === 'history' && <History />}
