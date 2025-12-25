@@ -22,6 +22,28 @@ app.use((req, res, next) => {
     next();
 });
 
+// Health check endpoint with DB test (Moved above routes for reliability)
+app.get('/api/v1/health', async (req, res) => {
+    try {
+        const db = require('./db');
+        await db.query('SELECT NOW()');
+        res.json({
+            status: 'success',
+            message: 'Server is running',
+            database: 'connected',
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        console.error('DATABASE ERROR:', err);
+        res.status(500).json({
+            status: 'error',
+            message: 'Server is running but database connection failed',
+            error: err.message,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
+    }
+});
+
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);

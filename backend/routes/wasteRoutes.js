@@ -10,7 +10,7 @@ router.get('/departments', async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         console.error('Error fetching departments:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 
@@ -54,7 +54,7 @@ router.post('/waste', authenticateToken, authorizeRoles('student'), async (req, 
 
         // Get department info for response
         const deptResult = await db.query('SELECT name FROM departments WHERE id = $1', [deptId]);
-        
+
         res.status(201).json({
             ...result.rows[0],
             department_name: deptResult.rows[0]?.name
