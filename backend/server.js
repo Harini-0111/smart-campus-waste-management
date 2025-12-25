@@ -24,33 +24,19 @@ app.use((req, res, next) => {
 
 // Health check endpoint with DB test (Moved above routes for reliability)
 app.get('/api/v1/health', async (req, res) => {
-    try {
-        const db = require('./db');
-        await db.query('SELECT NOW()');
-
-        // Check email config (masked)
-        const emailUser = process.env.EMAIL_USER;
-        const emailPass = process.env.EMAIL_PASS;
-
-        res.json({
-            status: 'success',
-            message: 'Server is running',
-            database: 'connected',
-            emailConfig: {
-                configured: !!(emailUser && emailPass),
-                user: emailUser ? `${emailUser.substring(0, 3)}***${emailUser.substring(emailUser.indexOf('@'))}` : 'NOT SET',
-                passStored: !!emailPass
-            },
-            timestamp: new Date().toISOString()
+    user: emailUser ? `${emailUser.substring(0, 3)}***${emailUser.substring(emailUser.indexOf('@'))}` : 'NOT SET',
+        passStored: !!emailPass
+},
+    timestamp: new Date().toISOString()
         });
     } catch (err) {
-        console.error('DATABASE ERROR:', err);
-        res.status(500).json({
-            status: 'error',
-            message: 'Server is running but database connection failed',
-            error: err.message
-        });
-    }
+    console.error('DATABASE ERROR:', err);
+    res.status(500).json({
+        status: 'error',
+        message: 'Server is running but database connection failed',
+        error: err.message
+    });
+}
 });
 
 // Temporary Database Initialization Route
