@@ -1,9 +1,12 @@
 const express = require('express');
 const cors = require('cors');
+const nodemailer = require('nodemailer');
+const db = require('./db');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
 const wasteRoutes = require('./routes/wasteRoutes');
 const authRoutes = require('./routes/authRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
@@ -14,29 +17,51 @@ const userRoutes = require('./routes/userRoutes');
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads')); // Serve uploaded images
+app.use('/uploads', express.static('uploads'));
 
-// Logging Middleware
+// Logging
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
 });
 
-// Health check endpoint with DB test (Moved above routes for reliability)
+// Health check with real-time email & db testing
 app.get('/api/v1/health', async (req, res) => {
-    user: emailUser ? `${emailUser.substring(0, 3)}***${emailUser.substring(emailUser.indexOf('@'))}` : 'NOT SET',
-        passStored: !!emailPass
-},
-    timestamp: new Date().toISOString()
-        });
+    let dbStatus = 'Disconnected';
+    let emailStatus = 'Not Configured';
+
+    try {
+        await db.query('SELECT 1');
+        dbStatus = 'Connected';
     } catch (err) {
-    console.error('DATABASE ERROR:', err);
-    res.status(500).json({
-        status: 'error',
-        message: 'Server is running but database connection failed',
-        error: err.message
+        dbStatus = `Error: ${err.message}`;
+    }
+
+    try {
+        const user = process.env.EMAIL_USER;
+        const pass = process.env.EMAIL_PASS;
+        if (user && pass) {
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: { user, pass }
+            });
+            await transporter.verify();
+            emailStatus = 'Connected';
+        }
+    } catch (err) {
+        emailStatus = `Error: ${err.message}`;
+    }
+
+    res.json({
+        status: dbStatus === 'Connected' ? 'ok' : 'degraded',
+        database: dbStatus,
+        email: emailStatus,
+        config: {
+            email_user: process.env.EMAIL_USER ? `${process.env.EMAIL_USER.substring(0, 3)}***` : 'Not Set',
+            has_email_pass: !!process.env.EMAIL_PASS
+        },
+        timestamp: new Date().toISOString()
     });
-}
 });
 
 // Temporary Database Initialization Route
@@ -59,12 +84,10 @@ app.use('/api/v1/tasks', taskRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1', wasteRoutes);
 
-// Root route for sanity check
 app.get('/', (req, res) => {
     res.send('Smart Campus Waste Management System API is running');
 });
 
-// Start Server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
