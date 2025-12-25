@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import WasteForm from './WasteForm';
 
-const UserDashboard = () => {
+const UserDashboard = ({ onOpenHistory }) => {
     const { user } = useAuth();
     const [view, setView] = useState('home'); // 'home' | 'log'
 
@@ -79,16 +79,22 @@ const UserDashboard = () => {
                             </div>
                         </button>
 
-                        <div className="bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-2xl transition-all duration-300 relative overflow-hidden flex flex-col stagger-2">
-                            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-sm">
-                                <History size={32} />
+                        <button
+                            onClick={onOpenHistory}
+                            className="bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative overflow-hidden flex flex-col stagger-2 text-left group"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 -mr-16 -mt-16 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                            <div className="relative z-10">
+                                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all transform group-hover:-rotate-6">
+                                    <History size={32} />
+                                </div>
+                                <h3 className="font-black text-3xl text-slate-900 tracking-tight mb-3">Personal Ledger</h3>
+                                <p className="text-slate-500 font-medium leading-relaxed max-w-sm">Audit your historical contributions and climate ROI.</p>
+                                <div className="mt-8 flex items-center gap-2 text-blue-600 font-black uppercase tracking-widest text-[10px]">
+                                    Access Archives <ArrowRight size={16} className="group-hover:translate-x-3 transition-transform" />
+                                </div>
                             </div>
-                            <h3 className="font-black text-3xl text-slate-900 tracking-tight mb-3">Personal Ledger</h3>
-                            <p className="text-slate-500 font-medium leading-relaxed max-w-sm">Audit your historical contributions and climate ROI.</p>
-                            <div className="mt-auto pt-8 flex gap-2">
-                                <span className="px-4 py-1.5 bg-slate-100 text-slate-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-200">System Ready</span>
-                            </div>
-                        </div>
+                        </button>
                     </div>
 
                     {/* Impact Stats */}

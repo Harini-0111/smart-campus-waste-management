@@ -2,8 +2,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Sora:wght@100..800&display=swap');
 
 @theme {
-  --font-sans: 'Outfit', sans-serif;
-  --font-display: 'Sora', 'Outfit', sans-serif;
+  --font-sans: 'Inter', 'Outfit', sans-serif;
+  --font-display: 'Outfit', 'Sora', sans-serif;
+  --font-intel: 'Outfit', sans-serif;
 
   /* Brand Colors - Opinionated, High-Contrast Palette */
   /* Emerald - Primary (Nature, Growth, Sustainability) */
@@ -37,11 +38,24 @@
   --color-accent-500: #f59e0b;
   --color-accent-600: #d97706;
 
+  /* Intelligence - Indigo (AI, Foresight, Intelligence) */
+  --color-intel-50: #eef2ff;
+  --color-intel-100: #e0e7ff;
+  --color-intel-200: #c7d2fe;
+  --color-intel-300: #a5b4fc;
+  --color-intel-400: #818cf8;
+  --color-intel-500: #6366f1;
+  --color-intel-600: #4f46e5;
+  --color-intel-700: #4338ca;
+  --color-intel-800: #3730a3;
+  --color-intel-900: #312e81;
+
   /* Semantic Colors */
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #2563eb;
+  --color-ai: #4f46e5;
 }
 
 @layer base {
@@ -81,7 +95,15 @@
   }
 
   .premium-card {
-    @apply bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 hover:border-emerald-500/20 transition-all duration-500;
+    @apply bg-white border border-slate-200/50 rounded-[2rem] shadow-sm hover:shadow-xl hover:shadow-slate-200/40 hover:-translate-y-1 transition-all duration-500;
+  }
+
+  .insight-card {
+    @apply premium-card border-l-4 border-l-intel-500 bg-gradient-to-br from-white to-intel-50/30;
+  }
+
+  .pulse-ai {
+    @apply relative overflow-hidden after:absolute after:inset-0 after:bg-intel-400/10 after:animate-pulse;
   }
 
   .btn-primary {

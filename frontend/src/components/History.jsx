@@ -26,8 +26,8 @@ const History = () => {
     }, []);
 
     const filtered = logs.filter(item =>
-        item.location_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.waste_type.toLowerCase().includes(searchTerm.toLowerCase())
+        (item.location_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.waste_type || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (loading) return (
@@ -76,9 +76,9 @@ const History = () => {
                                                 <Calendar size={20} />
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="font-black text-slate-950 tracking-tight text-lg mb-1">{new Date(item.collected_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                <span className="font-black text-slate-950 tracking-tight text-lg mb-1">{new Date(item.reported_at || item.collected_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
-                                                    <Clock size={12} /> {new Date(item.collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    <Clock size={12} /> {new Date(item.reported_at || item.collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
                                         </div>

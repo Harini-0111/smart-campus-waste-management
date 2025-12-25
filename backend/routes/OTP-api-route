@@ -1,0 +1,4 @@
+generateOtp(email);
+sendOtpEmail(email).catch(console.error);
+
+res.json({ success: true, message: "OTP sent" });

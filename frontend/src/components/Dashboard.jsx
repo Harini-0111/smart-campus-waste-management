@@ -5,6 +5,7 @@ import {
     TrendingUp, TrendingDown, AlertTriangle, Leaf, Clock, ArrowRight,
     BarChart3, Activity, CheckCircle2, MoreHorizontal, Image as ImageIcon
 } from 'lucide-react';
+import { API_URL } from '../config';
 
 const Dashboard = ({ refreshTrigger, onViewHistory }) => {
     const [data, setData] = useState({ total_today: 0, by_type: [], by_location: [], recent: [] });
@@ -13,6 +14,10 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
     const yesterdayTotal = 120.5;
     const growth = data.total_today > 0 ? ((data.total_today - yesterdayTotal) / yesterdayTotal * 100) : 0;
     const growthIsPositive = growth >= 0;
+
+    const segregationScore = data.by_type?.length > 0
+        ? Math.round((data.by_type.find(t => t.name === 'Wet')?.value / data.total_today) * 100) || 85
+        : 0;
 
     const fetchData = async () => {
         try {

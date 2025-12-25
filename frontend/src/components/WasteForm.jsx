@@ -1,19 +1,41 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Send, CircleCheck, CircleAlert, ChevronDown, Package, Camera, X, Loader2 } from 'lucide-react';
+import { Send, CircleCheck, ChevronDown, Package, Camera, X, Loader2 } from 'lucide-react';
 import { API_URL } from '../config';
 import { useNotification } from './NotificationSystem';
+
+/* ---------- SMART CLASSIFICATION LOGIC ---------- */
+function classifyWaste(text) {
+    const lower = text.toLowerCase();
+
+    if (lower.includes("plastic") || lower.includes("bottle") || lower.includes("wrapper")) return "Recyclable";
+    if (lower.includes("food") || lower.includes("organic") || lower.includes("waste")) return "Wet";
+    if (lower.includes("battery") || lower.includes("chemical") || lower.includes("sharp")) return "Hazardous";
+    if (lower.includes("circuit") || lower.includes("electronic")) return "E-waste";
+
+    return "Dry";
+}
+/* ------------------------------------------------ */
 
 const WasteForm = ({ onEntryAdded }) => {
     const { notify } = useNotification();
     const [locations, setLocations] = useState([]);
-    const [formData, setFormData] = useState({ location_id: '', waste_type: 'Dry', quantity_kg: '', image_url: '', description: '' });
+    const [formData, setFormData] = useState({
+        location_id: '',
+        waste_type: 'Dry',
+        quantity_kg: '',
+        image_url: '',
+        description: ''
+    });
+
     const [loading, setLoading] = useState(false);
     const [preview, setPreview] = useState(null);
     const [file, setFile] = useState(null);
 
     useEffect(() => {
-        axios.get(`${API_URL}/locations`)
+        axios.get(`${API_URL}/locations`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        })
             .then(res => setLocations(res.data))
             .catch(err => console.error("Failed to load locations", err));
     }, []);
@@ -27,10 +49,10 @@ const WasteForm = ({ onEntryAdded }) => {
     ];
 
     const handleImageSelect = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setFile(file);
-            setPreview(URL.createObjectURL(file));
+        const selected = e.target.files[0];
+        if (selected) {
+            setFile(selected);
+            setPreview(URL.createObjectURL(selected));
         }
     };
 
@@ -45,6 +67,7 @@ const WasteForm = ({ onEntryAdded }) => {
         if (!formData.location_id) return notify("Sector selection required", "error");
 
         setLoading(true);
+
         try {
             const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
             let finalImageUrl = formData.image_url;
@@ -52,21 +75,38 @@ const WasteForm = ({ onEntryAdded }) => {
             if (file) {
                 const uploadData = new FormData();
                 uploadData.append('image', file);
+
                 const uploadRes = await axios.post(`${API_URL}/upload`, uploadData, {
                     headers: { ...headers, 'Content-Type': 'multipart/form-data' }
                 });
+
                 finalImageUrl = uploadRes.data.imageUrl;
             }
 
-            await axios.post(`${API_URL}/waste`, { ...formData, image_url: finalImageUrl }, {
-                headers
+            // 🔥 AUTO CLASSIFICATION HERE
+            const autoWasteType = classifyWaste(formData.description);
+
+            await axios.post(`${API_URL}/waste`, {
+                ...formData,
+                waste_type: autoWasteType,
+                image_url: finalImageUrl
+            }, { headers });
+
+            notify(`Waste auto-classified as ${autoWasteType}`, "success");
+
+            setFormData({
+                location_id: '',
+                waste_type: 'Dry',
+                quantity_kg: '',
+                image_url: '',
+                description: ''
             });
 
-            notify("Log Committed to Blockchain History", "success");
-            setFormData({ location_id: '', waste_type: 'Dry', quantity_kg: '', image_url: '', description: '' });
             setPreview(null);
             setFile(null);
+
             if (onEntryAdded) onEntryAdded();
+
         } catch (error) {
             console.error('Submission error:', error);
             notify("Data Sync Error. Transmission Interrupted.", "critical");
@@ -78,133 +118,123 @@ const WasteForm = ({ onEntryAdded }) => {
     return (
         <div className="max-w-3xl mx-auto animate-slideUp pb-12">
             <div className="premium-card overflow-hidden shadow-2xl shadow-slate-200/60 transition-all hover:border-slate-300">
+
                 <div className="px-12 py-10 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                     <div>
                         <span className="badge-emerald mb-3">Field Reporting</span>
-                        <h2 className="font-black text-4xl text-slate-950 tracking-tighter">Log Waste Discovery</h2>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-2">Operational Telemetry Data Input</p>
+                        <h2 className="font-black text-4xl text-slate-950 tracking-tighter">
+                            Log Waste Discovery
+                        </h2>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-2">
+                            Operational Telemetry Data Input
+                        </p>
                     </div>
                     <div className="bg-slate-950 p-6 rounded-[2rem] text-emerald-400 shadow-2xl animate-float">
                         <Package size={32} />
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-12 space-y-12">
-                    <div className="grid gap-12">
-                        {/* Location */}
-                        <div className="space-y-4">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Deployment Sector</label>
-                            <div className="relative group">
-                                <select
-                                    required
-                                    className="input-field pl-8 pr-14 py-6 text-lg"
-                                    value={formData.location_id}
-                                    onChange={(e) => setFormData({ ...formData, location_id: e.target.value })}
+                <form onSubmit={handleSubmit} className="p-12 space-y-10">
+
+                    {/* Location Selection */}
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <ChevronDown size={14} /> Deployment Sector
+                        </label>
+                        <select
+                            required
+                            className="input-field appearance-none cursor-pointer"
+                            value={formData.location_id}
+                            onChange={(e) => setFormData({ ...formData, location_id: e.target.value })}
+                        >
+                            <option value="">Select Location Node...</option>
+                            {locations.map(loc => (
+                                <option key={loc.id} value={loc.id}>{loc.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Quantity Input */}
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            Estimated Mass (KG)
+                        </label>
+                        <input
+                            type="number"
+                            required
+                            placeholder="e.g. 15.5"
+                            className="input-field"
+                            value={formData.quantity_kg}
+                            onChange={(e) => setFormData({ ...formData, quantity_kg: e.target.value })}
+                        />
+                    </div>
+
+                    {/* Image Upload Area */}
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <Camera size={14} /> Visual Audit (Optional)
+                        </label>
+
+                        {!preview ? (
+                            <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-200 rounded-[2rem] cursor-pointer hover:bg-slate-50 transition-all hover:border-emerald-500/30 group">
+                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <Camera className="text-slate-300 group-hover:text-emerald-500 transition-colors mb-4" size={40} />
+                                    <p className="text-xs font-bold text-slate-400 group-hover:text-slate-600 transition-colors">Capture or Upload Asset</p>
+                                </div>
+                                <input type="file" className="hidden" accept="image/*" onChange={handleImageSelect} />
+                            </label>
+                        ) : (
+                            <div className="relative rounded-[2rem] overflow-hidden group">
+                                <img src={preview} alt="Preview" className="w-full h-64 object-cover" />
+                                <button
+                                    onClick={removeImage}
+                                    className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur-md rounded-2xl text-red-500 shadow-xl opacity-0 group-hover:opacity-100 transition-all"
                                 >
-                                    <option value="" className="text-slate-400">Identify campus zone...</option>
-                                    {locations.map(loc => (
-                                        <option key={loc.id} value={loc.id} className="text-slate-900 font-bold">{loc.name}</option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-hover:text-slate-950 transition-colors" size={24} />
-                            </div>
-                        </div>
-
-                        {/* Waste Type Grid */}
-                        <div className="space-y-6">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Composition Classification</label>
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-                                {wasteTypes.map(type => (
-                                    <div
-                                        key={type.id}
-                                        onClick={() => setFormData({ ...formData, waste_type: type.id })}
-                                        className={`cursor-pointer p-6 rounded-[2rem] border-2 transition-all flex flex-col gap-4 group relative overflow-hidden ${formData.waste_type === type.id
-                                            ? 'border-slate-950 bg-slate-950 ring-8 ring-slate-100'
-                                            : 'border-slate-100 hover:border-slate-200 bg-white'
-                                            }`}
-                                    >
-                                        <div className={`w-3 h-3 rounded-full ${type.color} shadow-lg`} />
-                                        <div>
-                                            <h3 className={`text-[12px] font-black tracking-widest uppercase ${formData.waste_type === type.id ? 'text-white' : 'text-slate-900'}`}>{type.label}</h3>
-                                            <p className={`text-[10px] font-bold uppercase tracking-tighter mt-1 ${formData.waste_type === type.id ? 'text-slate-400' : 'text-slate-400'}`}>{type.desc}</p>
-                                        </div>
-                                        {formData.waste_type === type.id && (
-                                            <div className="absolute top-4 right-4 text-emerald-400 animate-fadeIn">
-                                                <CircleCheck size={16} />
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-12">
-                            {/* Quantity */}
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Calibrated Mass</label>
-                                <div className="relative group">
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        required
-                                        min="0.1"
-                                        className="input-field pl-8 pr-16 py-6 text-2xl tabular-nums font-black"
-                                        placeholder="0.0"
-                                        value={formData.quantity_kg}
-                                        onChange={(e) => setFormData({ ...formData, quantity_kg: e.target.value })}
-                                    />
-                                    <span className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 text-[12px] font-black uppercase tracking-widest">KG</span>
+                                    <X size={20} />
+                                </button>
+                                <div className="absolute bottom-4 left-4 p-4 bg-emerald-600/90 backdrop-blur-md rounded-2xl text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                                    <CircleCheck size={14} /> Image Encoded
                                 </div>
                             </div>
+                        )}
+                    </div>
 
-                            {/* Image Capture */}
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Visual Evidence</label>
-                                {!preview ? (
-                                    <div className="relative h-[76px]">
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageSelect}
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                        />
-                                        <div className="w-full h-full bg-slate-100 border-2 border-dashed border-slate-200 rounded-[2rem] flex items-center justify-center gap-4 text-slate-400 hover:bg-slate-50 hover:border-slate-300 transition-all group">
-                                            <Camera size={24} className="group-hover:scale-110 group-hover:text-slate-950 transition-all" />
-                                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Capture Asset</span>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="relative group h-[76px] rounded-[2rem] overflow-hidden border-2 border-slate-950 shadow-2xl animate-fadeIn">
-                                        <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-                                        <button type="button" onClick={removeImage} className="absolute inset-0 bg-slate-950/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white backdrop-blur-[4px]">
-                                            <X size={28} className="animate-shake" />
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                    {/* Description & Auto-Classification */}
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                Discovery Details
+                            </label>
+                            <span className="text-[9px] font-black text-intel-500 bg-intel-50 px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-2 animate-pulse">
+                                ✨ AI Auto-Sort Active
+                            </span>
                         </div>
-
-                        {/* Description */}
-                        <div className="space-y-4">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Direct Observations</label>
-                            <textarea
-                                placeholder="Detail environmental conditions or priority level..."
-                                className="input-field px-8 py-6 text-lg min-h-[140px] resize-none"
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            ></textarea>
-                        </div>
+                        <textarea
+                            placeholder="Describe the waste (e.g. 5 plastic bottles found near hostel entrance)"
+                            className="input-field min-h-[140px] resize-none"
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        ></textarea>
+                        <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                            Pro-tip: Be specific about materials (plastic, food, electronic) for precise AI classification.
+                        </p>
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="btn-primary w-full py-8 bg-slate-950 text-white hover:bg-emerald-600 disabled:opacity-30 disabled:hover:bg-slate-950 flex items-center justify-center gap-6 group overflow-hidden"
+                        className="btn-primary w-full py-8 text-lg flex items-center justify-center gap-4 group"
                     >
-                        <div className="relative z-10 flex items-center justify-center gap-6 text-[12px] font-black uppercase tracking-[0.4em]">
-                            {loading ? <Loader2 className="animate-spin" size={24} /> : <>TRANSMIT RECORD <Send size={24} className="group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" /></>}
-                        </div>
+                        {loading ? (
+                            <Loader2 className="animate-spin" size={24} />
+                        ) : (
+                            <>
+                                TRANSMIT TO HUB
+                                <Send size={24} className="group-hover:translate-x-2 group-hover:-translate-y-1 transition-transform" />
+                            </>
+                        )}
                     </button>
+
                 </form>
             </div>
         </div>
@@ -212,4 +242,3 @@ const WasteForm = ({ onEntryAdded }) => {
 };
 
 export default WasteForm;
-

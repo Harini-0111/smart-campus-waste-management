@@ -165,7 +165,7 @@ router.post('/register', async (req, res) => {
             `INSERT INTO users (username, email, password_hash, full_name, registration_number, role, department_id, phone, email_verified) 
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true) 
              RETURNING id, username, email, full_name, registration_number, role, department_id`,
-            [username, email, hashedPassword, full_name, registration_number, role, department_id || null, phone || null]
+            [username, email, hashedPassword, full_name, registration_number, role, (department_id && department_id !== '') ? department_id : null, phone || null]
         );
 
         const user = result.rows[0];
