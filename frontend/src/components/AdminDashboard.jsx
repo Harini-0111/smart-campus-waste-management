@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
-    TrendingUp, TrendingDown, AlertTriangle, Leaf, Clock, ArrowRight,
-    BarChart3, Activity, CheckCircle2, MoreHorizontal, Image as ImageIcon, ShieldAlert
+    TrendingUp, TrendingDown, TriangleAlert, Leaf, Clock, ArrowRight,
+    ChartBar, Activity, CircleCheck, MoreHorizontal, Image as ImageIcon, ShieldAlert
 } from 'lucide-react';
 import { API_URL } from '../config';
 import { DashboardSkeleton } from './SkeletonLoader';
@@ -80,7 +80,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                             <h3 className="text-4xl font-black text-slate-950 tracking-tighter">88.5<span className="text-sm font-bold text-slate-300">%</span></h3>
                         </div>
                         <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100 shadow-sm transition-transform group-hover:scale-110">
-                            <CheckCircle2 size={24} />
+                            <CircleCheck size={24} />
                         </div>
                     </div>
                 </div>

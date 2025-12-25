@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Send, CheckCircle2, AlertCircle, ChevronDown, Package, Camera, X, Loader2 } from 'lucide-react';
+import { Send, CircleCheck, CircleAlert, ChevronDown, Package, Camera, X, Loader2 } from 'lucide-react';
 import { API_URL } from '../config';
 import { useNotification } from './NotificationSystem';
 
@@ -130,7 +130,7 @@ const WasteForm = ({ onEntryAdded }) => {
                                         </div>
                                         {formData.waste_type === type.id && (
                                             <div className="absolute top-4 right-4 text-emerald-400 animate-fadeIn">
-                                                <CheckCircle2 size={16} />
+                                                <CircleCheck size={16} />
                                             </div>
                                         )}
                                     </div>

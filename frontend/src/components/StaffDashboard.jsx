@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
-import { CheckCircle2, Clock, Trash2, ShieldCheck, Camera, Loader2, Image as ImageIcon } from 'lucide-react';
+import { CircleCheck, Clock, Trash2, ShieldCheck, Camera, Loader2, Image as ImageIcon } from 'lucide-react';
 import { ListSkeleton } from './SkeletonLoader';
 
 const StaffDashboard = () => {
@@ -127,7 +127,7 @@ const StaffDashboard = () => {
                                         onClick={() => setCompleting(task.id)}
                                         className="btn-primary w-full md:w-auto px-10 py-5 bg-slate-950 text-white hover:bg-emerald-500 flex items-center justify-center gap-3"
                                     >
-                                        <CheckCircle2 size={18} /> INITIALIZE CLEANUP
+                                        <CircleCheck size={18} /> INITIALIZE CLEANUP
                                     </button>
                                 )}
                                 {task.status === 'Completed' && (
@@ -188,7 +188,7 @@ const StaffDashboard = () => {
                                             disabled={!completionImage || uploading}
                                             className="btn-primary w-full py-6 bg-slate-950 text-white hover:bg-emerald-600 disabled:opacity-30 disabled:hover:bg-slate-950 flex items-center justify-center gap-3"
                                         >
-                                            <CheckCircle2 size={20} /> SUBMIT RESOLUTION & LOG
+                                            <CircleCheck size={20} /> SUBMIT RESOLUTION & LOG
                                         </button>
                                     </div>
                                 </div>

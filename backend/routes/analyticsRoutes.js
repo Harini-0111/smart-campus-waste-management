@@ -6,19 +6,25 @@ const { predictNextDay, detectHotspots, calculateEfficiency } = require('../util
 
 // GET /api/v1/analytics/prediction - Get waste prediction
 router.get('/prediction', authenticateToken, async (req, res) => {
-    const { location_id } = req.query;
+    const { department_id } = req.query;
 
     try {
-        const query = `
-            SELECT DATE(collected_at) as date, SUM(quantity_kg) as total 
+        let query = `
+            SELECT DATE(reported_at) as date, SUM(quantity_kg) as total 
             FROM waste_logs 
-            WHERE collected_at >= NOW() - INTERVAL '30 days'
-            ${location_id ? 'AND location_id = $1' : ''}
-            GROUP BY DATE(collected_at)
-            ORDER BY DATE(collected_at) ASC
+            WHERE reported_at >= NOW() - INTERVAL '30 days'
         `;
+        let params = [];
 
-        const params = location_id ? [location_id] : [];
+        // Filter by department if specified or user's department
+        const filterDept = department_id || req.user.department_id;
+        if (filterDept) {
+            query += ' AND department_id = $1';
+            params.push(filterDept);
+        }
+
+        query += ' GROUP BY DATE(reported_at) ORDER BY DATE(reported_at) ASC';
+
         const result = await db.query(query, params);
 
         const dataPoints = result.rows.map((row, index) => ({
@@ -40,16 +46,31 @@ router.get('/prediction', authenticateToken, async (req, res) => {
 });
 
 // GET /api/v1/analytics/hotspots - Identify problem zones
-router.get('/hotspots', authenticateToken, authorizeRoles('admin', 'block_admin'), async (req, res) => {
+router.get('/hotspots', authenticateToken, authorizeRoles('admin'), async (req, res) => {
     try {
-        const result = await db.query(`
-            SELECT wl.location_id, wl.severity, wl.quantity_kg, l.name as location_name
-            FROM waste_logs wl
-            JOIN locations l ON wl.location_id = l.id
-            WHERE wl.collected_at >= NOW() - INTERVAL '7 days'
-        `);
+        let query = `
+            SELECT w.department_id, w.severity, w.quantity_kg, d.name as department_name
+            FROM waste_logs w
+            JOIN departments d ON w.department_id = d.id
+            WHERE w.reported_at >= NOW() - INTERVAL '7 days'
+        `;
+        let params = [];
 
-        const hotspots = detectHotspots(result.rows);
+        // Filter by admin's department if they have one
+        if (req.user.department_id) {
+            query += ' AND w.department_id = $1';
+            params.push(req.user.department_id);
+        }
+
+        const result = await db.query(query, params);
+
+        const hotspots = detectHotspots(result.rows.map(row => ({
+            location_id: row.department_id,
+            location_name: row.department_name,
+            severity: row.severity,
+            quantity_kg: row.quantity_kg
+        })));
+
         res.json(hotspots);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -59,15 +80,56 @@ router.get('/hotspots', authenticateToken, authorizeRoles('admin', 'block_admin'
 // GET /api/v1/analytics/efficiency - Staff Performance
 router.get('/efficiency', authenticateToken, authorizeRoles('admin'), async (req, res) => {
     try {
-        const result = await db.query(`
-            SELECT t.assigned_to as staff_id, t.status, u.username as staff_name,
+        let query = `
+            SELECT t.assigned_to as staff_id, t.status, u.full_name as staff_name,
             EXTRACT(EPOCH FROM (t.updated_at - t.created_at))/3600 as response_time_hrs
             FROM tasks t
             JOIN users u ON t.assigned_to = u.id
-        `);
+            JOIN waste_logs w ON t.waste_log_id = w.id
+        `;
+        let params = [];
+
+        // Filter by admin's department if they have one
+        if (req.user.department_id) {
+            query += ' WHERE w.department_id = $1';
+            params.push(req.user.department_id);
+        }
+
+        const result = await db.query(query, params);
 
         const efficiency = calculateEfficiency(result.rows);
         res.json(efficiency);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/v1/analytics/department-stats - Department-wise statistics
+router.get('/department-stats', authenticateToken, authorizeRoles('admin'), async (req, res) => {
+    try {
+        let query = `
+            SELECT 
+                d.name as department_name,
+                d.code as department_code,
+                COUNT(w.id) as total_reports,
+                COALESCE(SUM(w.quantity_kg), 0) as total_kg,
+                COUNT(CASE WHEN w.status = 'Completed' THEN 1 END) as completed_reports,
+                COUNT(CASE WHEN w.severity = 'High' OR w.severity = 'Critical' THEN 1 END) as high_priority_reports
+            FROM departments d
+            LEFT JOIN waste_logs w ON d.id = w.department_id
+        `;
+        let params = [];
+
+        // Filter by admin's department if they have one
+        if (req.user.department_id) {
+            query += ' WHERE d.id = $1';
+            params.push(req.user.department_id);
+        }
+
+        query += ' GROUP BY d.id, d.name, d.code ORDER BY total_reports DESC';
+
+        const result = await db.query(query, params);
+        res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

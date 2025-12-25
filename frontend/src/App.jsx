@@ -9,7 +9,7 @@ import Login from './components/Login';
 import Logo from './components/Logo';
 import AdminTaskManager from './components/AdminTaskManager';
 import PageTransition from './components/PageTransition';
-import { LayoutGrid, PlusSquare, BarChart2, History as HistoryIcon, LogOut, Activity } from 'lucide-react';
+import { LayoutGrid, SquarePlus, ChartBar, History as HistoryIcon, LogOut, Activity } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './components/NotificationSystem';
 
@@ -53,10 +53,10 @@ function AppContent() {
             {isAdmin && (
               <nav className="hidden lg:flex items-center gap-1">
                 <NavButton active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={LayoutGrid} label="Insights" />
-                <NavButton active={activeTab === 'entry'} onClick={() => setActiveTab('entry')} icon={PlusSquare} label="Report" />
+                <NavButton active={activeTab === 'entry'} onClick={() => setActiveTab('entry')} icon={SquarePlus} label="Report" />
                 <NavButton active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} icon={Activity} label="Directives" />
                 <NavButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={HistoryIcon} label="Audit Log" />
-                <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={BarChart2} label="Intelligence" />
+                <NavButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={ChartBar} label="Intelligence" />
               </nav>
             )}
           </div>
