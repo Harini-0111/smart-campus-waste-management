@@ -25,9 +25,22 @@ const Register = ({ onSwitchToLogin }) => {
     useEffect(() => {
         // Fetch departments for dropdown
         fetch(`${API_URL}/departments`)
-            .then(res => res.json())
-            .then(data => setDepartments(data))
-            .catch(err => console.error('Failed to load departments:', err));
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to load departments');
+                return res.json();
+            })
+            .then(data => {
+                if (Array.isArray(data)) {
+                    setDepartments(data);
+                } else {
+                    console.error('Expected array for departments, got:', data);
+                    setDepartments([]);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load departments:', err);
+                setDepartments([]); // Ensure it's never undefined/non-array
+            });
     }, []);
 
     const handleSendOTP = async (e) => {
@@ -200,8 +213,8 @@ const Register = ({ onSwitchToLogin }) => {
                                         type="button"
                                         onClick={() => setFormData({ ...formData, role: role.value })}
                                         className={`p-6 rounded-2xl border-2 transition-all text-center ${formData.role === role.value
-                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                                             }`}
                                     >
                                         <div className="text-3xl mb-3">{role.icon}</div>
@@ -296,7 +309,7 @@ const Register = ({ onSwitchToLogin }) => {
                                             onChange={handleChange}
                                         >
                                             <option value="">Select Department</option>
-                                            {departments.map(dept => (
+                                            {departments?.map(dept => (
                                                 <option key={dept.id} value={dept.id}>
                                                     {dept.name} ({dept.code})
                                                 </option>

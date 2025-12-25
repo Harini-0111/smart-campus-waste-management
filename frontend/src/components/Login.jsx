@@ -38,7 +38,8 @@ const Login = () => {
             setStep(2);
             setLoading(false);
         } catch (err) {
-            setError(err.message || 'Network error. Please try again.');
+            console.error('Login credentials error:', err);
+            setError(err.message || 'Server error. Please try again or check your connection.');
             setLoading(false);
         }
     };

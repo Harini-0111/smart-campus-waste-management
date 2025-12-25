@@ -31,7 +31,7 @@ const createTransporter = async () => {
 
     // Production: use Gmail with App Password
     console.log('📧 Using Gmail SMTP');
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
         service: 'gmail',
         auth: {
             user: emailUser,
