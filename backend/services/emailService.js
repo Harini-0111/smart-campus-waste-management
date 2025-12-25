@@ -110,30 +110,11 @@ const sendOTPEmail = async (email, otp, name = 'User') => {
 
     try {
         const transporter = await createTransporter();
-        console.log('📧 Transporter created, sending email...');
-
         const info = await transporter.sendMail(mailOptions);
-
-        console.log('✅ Email sent successfully!');
-        console.log(`   Message ID: ${info.messageId}`);
-
-        // Check if using Ethereal (test account)
-        if (info.messageId && info.messageId.includes('ethereal')) {
-            const previewUrl = nodemailer.getTestMessageUrl(info);
-            console.log(`\n📬 Preview URL (Ethereal): ${previewUrl}`);
-            console.log(`🔐 OTP for ${email}: ${otp}\n`);
-            return { success: true, previewUrl, otp };
-        }
-
-        return { success: true };
-
+        console.log(`✅ OTP Email sent to ${email}. ID: ${info.messageId}`);
     } catch (error) {
-        console.error('\n❌ Email sending failed!');
-        console.error('   Error Message:', error.message);
-        console.error('   Error Code:', error.code || 'N/A');
-
-        // Re-throw the error so the route handler knows it failed
-        throw error;
+        console.error(`❌ OTP Email FAILED for ${email}:`, error.message);
+        // Silent failure for the route, but logged on server
     }
 };
 

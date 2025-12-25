@@ -21,37 +21,70 @@ router.post('/send-otp', async (req, res) => {
             return res.status(409).json({ error: 'Email already registered' });
         }
 
-        // Generate OTP
-        const otp = generateOTP();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-        // Delete any existing OTP for this email
-        await db.query('DELETE FROM email_verifications WHERE email = $1', [email]);
-
-        // Store OTP in database
-        await db.query(
-            'INSERT INTO email_verifications (email, otp, expires_at) VALUES ($1, $2, $3)',
-            [email, otp, expiresAt]
+        // Check for existing valid OTP to implement cooldown and reuse
+        const existingOtp = await db.query(
+            'SELECT otp, created_at, expires_at FROM email_verifications WHERE email = $1 AND verified = false ORDER BY created_at DESC LIMIT 1',
+            [email]
         );
 
-        // Send OTP email
-        const emailSent = await sendOTPEmail(email, otp, full_name || 'User');
+        let otp;
+        if (existingOtp.rows.length > 0) {
+            const lastOtp = existingOtp.rows[0];
+            const now = new Date();
+            const timeSinceLast = (now - new Date(lastOtp.created_at)) / 1000;
 
-        if (emailSent) {
-            const resp = { message: 'OTP sent successfully', email };
-            // For local development include the OTP in the response for easier testing
-            if (process.env.NODE_ENV === 'development') {
-                resp.otp = otp;
-                console.log(`Development OTP for ${email}: ${otp}`);
+            // Cooldown: 60 seconds
+            if (timeSinceLast < 60) {
+                return res.status(429).json({
+                    error: 'Please wait 60 seconds before requesting another OTP',
+                    secondsRemaining: Math.ceil(60 - timeSinceLast)
+                });
             }
-            res.json(resp);
-        } else {
-            res.status(500).json({ error: 'Failed to send OTP email' });
+
+            // Reuse: If still valid (has > 2 mins left), reuse it instead of generating new one
+            if (new Date(lastOtp.expires_at) > new Date(Date.now() + 2 * 60 * 1000)) {
+                otp = lastOtp.otp;
+            }
         }
+
+        if (!otp) {
+            otp = generateOTP();
+            const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+            // Delete any existing OTP for this email
+            await db.query('DELETE FROM email_verifications WHERE email = $1', [email]);
+
+            // Store NEW OTP in database
+            await db.query(
+                'INSERT INTO email_verifications (email, otp, expires_at) VALUES ($1, $2, $3)',
+                [email, otp, expiresAt]
+            );
+        }
+
+        // FIRE AND FORGET: Trigger email without awaiting
+        // This ensures the user gets a response even if the SMTP server is slow
+        sendOTPEmail(email, otp, full_name || 'User').catch(err => {
+            console.error('Background Email Error:', err.message);
+        });
+
+        // Respond immediately
+        const resp = {
+            message: 'OTP processed successfully. Please check your email.',
+            email,
+            cooldown: 60
+        };
+
+        // Development log
+        if (process.env.NODE_ENV === 'development') {
+            resp.otp = otp;
+            console.log(`[DEVEL] OTP for ${email}: ${otp}`);
+        }
+
+        res.json(resp);
 
     } catch (err) {
         console.error('Send OTP error:', err);
-        res.status(500).json({ error: 'Failed to send OTP' });
+        res.status(500).json({ error: 'Failed to process OTP request' });
     }
 });
 
@@ -268,53 +301,70 @@ router.post('/send-login-otp', async (req, res) => {
 
         const user = result.rows[0];
 
-        // Check if user is active
         if (!user.is_active) {
             return res.status(401).json({ error: 'Account is deactivated' });
         }
 
-        // Verify password
         const validPassword = await bcrypt.compare(password, user.password_hash);
         if (!validPassword) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Generate OTP
-        const otp = generateOTP();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-        // Delete any existing login OTP for this user
-        await db.query('DELETE FROM login_verifications WHERE user_id = $1', [user.id]);
-
-        // Store OTP in database (create table if needed)
-        await db.query(
-            `INSERT INTO login_verifications (user_id, email, otp, expires_at) 
-             VALUES ($1, $2, $3, $4)`,
-            [user.id, user.email, otp, expiresAt]
+        // Check for existing valid login OTP (Cooldown & Reuse)
+        const existingOtp = await db.query(
+            'SELECT otp, created_at, expires_at FROM login_verifications WHERE user_id = $1 AND verified = false ORDER BY created_at DESC LIMIT 1',
+            [user.id]
         );
 
-        // Send OTP email
-        const emailSent = await sendOTPEmail(user.email, otp, user.full_name);
+        let otp;
+        if (existingOtp.rows.length > 0) {
+            const lastOtp = existingOtp.rows[0];
+            const now = new Date();
+            const timeSinceLast = (now - new Date(lastOtp.created_at)) / 1000;
 
-        if (emailSent) {
-            const resp = {
-                message: 'OTP sent successfully. Please check your email.',
-                email: user.email,
-                requiresOTP: true
-            };
-            // For local development include the OTP in the response for easier testing
-            if (process.env.NODE_ENV === 'development') {
-                resp.otp = otp;
-                console.log(`Development Login OTP for ${user.email}: ${otp}`);
+            if (timeSinceLast < 60) {
+                return res.status(429).json({
+                    error: 'Please wait 60 seconds before requesting another OTP',
+                    secondsRemaining: Math.ceil(60 - timeSinceLast)
+                });
             }
-            res.json(resp);
-        } else {
-            res.status(500).json({ error: 'Failed to send OTP email' });
+
+            if (new Date(lastOtp.expires_at) > new Date(Date.now() + 2 * 60 * 1000)) {
+                otp = lastOtp.otp;
+            }
         }
+
+        if (!otp) {
+            otp = generateOTP();
+            const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+            await db.query('DELETE FROM login_verifications WHERE user_id = $1', [user.id]);
+            await db.query(
+                `INSERT INTO login_verifications (user_id, email, otp, expires_at) VALUES ($1, $2, $3, $4)`,
+                [user.id, user.email, otp, expiresAt]
+            );
+        }
+
+        // Fire and Forget email
+        sendOTPEmail(user.email, otp, user.full_name).catch(e => console.error('Login OTP Email Error:', e.message));
+
+        const resp = {
+            message: 'OTP processed. Please check your email.',
+            email: user.email,
+            requiresOTP: true,
+            cooldown: 60
+        };
+
+        if (process.env.NODE_ENV === 'development') {
+            resp.otp = otp;
+            console.log(`[DEVEL] Login OTP for ${user.email}: ${otp}`);
+        }
+
+        res.json(resp);
 
     } catch (err) {
         console.error('Send login OTP error:', err);
-        res.status(500).json({ error: 'Failed to send OTP' });
+        res.status(500).json({ error: 'Failed to process login OTP' });
     }
 });
 
