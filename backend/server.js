@@ -30,6 +30,26 @@ app.use('/api/v1/tasks', taskRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1', wasteRoutes);
 
+// Health check endpoint with DB test
+app.get('/api/v1/health', async (req, res) => {
+    try {
+        const db = require('./db');
+        await db.query('SELECT NOW()');
+        res.json({
+            status: 'success',
+            message: 'Server is running',
+            database: 'connected',
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Server is running but database is disconnected',
+            error: err.message
+        });
+    }
+});
+
 // Root route for sanity check
 app.get('/', (req, res) => {
     res.send('Smart Campus Waste Management System API is running');
