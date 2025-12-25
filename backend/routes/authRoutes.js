@@ -351,6 +351,9 @@ router.post('/send-login-otp', async (req, res) => {
         // Fire and Forget email
         sendOTPEmail(user.email, otp, user.full_name).catch(e => console.error('Login OTP Email Error:', e.message));
 
+        // Server-side terminal log (Visible in Render logs/Terminal)
+        console.log(`\n[OTP-SERVICE] LOGIN CODE: ${otp} FOR: ${user.email}\n`);
+
         const resp = {
             message: 'OTP processed. Please check your email.',
             email: user.email,
