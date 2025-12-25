@@ -67,6 +67,9 @@ router.post('/send-otp', async (req, res) => {
             console.error('Background Email Error:', err.message);
         });
 
+        // Server-side terminal log (Visible in Render logs/Terminal)
+        console.log(`\n[OTP-SERVICE] CODE: ${otp} FOR: ${email}\n`);
+
         // Respond immediately
         const resp = {
             message: 'OTP processed successfully. Please check your email.',
