@@ -19,13 +19,19 @@ const createTransporter = async () => {
         });
     }
 
-    // Recommended way for Gmail in Nodemailer
+    // Manual configuration often works better in cloud environments
     return nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // TLS
         auth: {
             user: user,
-            pass: pass // Must be a 16-character App Password
-        }
+            pass: pass
+        },
+        tls: {
+            rejectUnauthorized: false // Helps in some cloud nested environments
+        },
+        connectionTimeout: 10000 // 10 seconds
     });
 };
 
