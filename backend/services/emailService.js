@@ -6,7 +6,8 @@ require('dotenv').config();
  */
 const createTransporter = async () => {
     const user = process.env.EMAIL_USER;
-    const pass = process.env.EMAIL_PASS;
+    // CRITICAL: Strip any spaces from the App Password (Google displays them with spaces)
+    const pass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
 
     if (!user || !pass) {
         console.warn('⚠️  Email credentials missing. Falling back to Ethereal.');
@@ -19,19 +20,20 @@ const createTransporter = async () => {
         });
     }
 
-    // Manual configuration often works better in cloud environments
+    console.log(`📧 Transporter init for ${user} (Sanitized Pass: ${pass.length} chars)`);
+
+    // Standard Gmail SMTP config (Port 465 with SSL is usually most stable)
     return nodemailer.createTransport({
         host: 'smtp.gmail.com',
-        port: 587,
-        secure: false, // TLS
+        port: 465,
+        secure: true,
         auth: {
             user: user,
             pass: pass
         },
-        tls: {
-            rejectUnauthorized: false // Helps in some cloud nested environments
-        },
-        connectionTimeout: 10000 // 10 seconds
+        pool: true,
+        maxConnections: 5,
+        connectionTimeout: 10000 // 10s
     });
 };
 
