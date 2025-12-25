@@ -15,7 +15,7 @@ const History = () => {
                 const res = await axios.get(`${API_URL}/history`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 });
-                setLogs(res.data || []);
+                setLogs(Array.isArray(res.data) ? res.data : []);
                 setLoading(false);
             } catch (error) {
                 console.error('Fetch history error:', error);

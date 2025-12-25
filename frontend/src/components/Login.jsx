@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, Lock, Loader2, UserCircle, Shield, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 import Logo from './Logo';
 import Register from './Register';
 
@@ -21,7 +22,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1'}/auth/send-login-otp`, {
+            const response = await fetch(`${API_URL}/auth/send-login-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
@@ -48,7 +49,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1'}/auth/verify-login-otp`, {
+            const response = await fetch(`${API_URL}/auth/verify-login-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: userEmail, otp }),
@@ -78,7 +79,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1'}/auth/send-login-otp`, {
+            const response = await fetch(`${API_URL}/auth/send-login-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),

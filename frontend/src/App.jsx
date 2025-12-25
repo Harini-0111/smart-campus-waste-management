@@ -12,6 +12,7 @@ import PageTransition from './components/PageTransition';
 import { LayoutGrid, SquarePlus, ChartBar, History as HistoryIcon, LogOut, Activity } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './components/NotificationSystem';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function AppContent() {
   const { isAuthenticated, role, logout, user } = useAuth();
@@ -114,9 +115,11 @@ const NavButton = ({ active, onClick, icon: Icon, label }) => (
 function App() {
   return (
     <NotificationProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ErrorBoundary>
     </NotificationProvider>
   );
 }

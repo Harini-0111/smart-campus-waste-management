@@ -14,24 +14,24 @@ export const AuthProvider = ({ children }) => {
             fetch(`${API_URL}/auth/me`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
-            .then(res => {
-                if (res.ok) {
-                    return res.json();
-                } else {
-                    throw new Error('Invalid token');
-                }
-            })
-            .then(userData => {
-                setUser(userData);
-                localStorage.setItem('user', JSON.stringify(userData));
-            })
-            .catch(() => {
-                // Token is invalid, clear it
-                logout();
-            })
-            .finally(() => {
-                setLoading(false);
-            });
+                .then(res => {
+                    if (res.ok) {
+                        return res.json();
+                    } else {
+                        throw new Error('Invalid token');
+                    }
+                })
+                .then(userData => {
+                    setUser(userData);
+                    localStorage.setItem('user', JSON.stringify(userData));
+                })
+                .catch(() => {
+                    // Token is invalid, clear it
+                    logout();
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
         } else {
             setLoading(false);
         }
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };

@@ -23,10 +23,10 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                 axios.get(`${API_URL}/analytics/prediction`, { headers })
             ]);
 
-            setData(dashboardRes.data);
-            setPredictions(predictionRes.data);
+            setData(dashboardRes?.data || { total_today: 0, by_type: [], by_location: [], recent: [] });
+            setPredictions(predictionRes?.data || null);
 
-            const hasHazardous = dashboardRes.data.recent.some(r => r.waste_type === 'Hazardous');
+            const hasHazardous = (dashboardRes?.data?.recent || []).some(r => r.waste_type === 'Hazardous');
             if (hasHazardous) {
                 notify("Critical: Hazardous Waste Breach Detected", "critical");
             }
@@ -65,7 +65,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Daily Managed Mass</p>
-                            <h3 className="text-4xl font-black text-slate-950 tracking-tighter">{Number(data.total_today).toFixed(1)} <span className="text-sm font-bold text-slate-300">KG</span></h3>
+                            <h3 className="text-4xl font-black text-slate-950 tracking-tighter">{Number(data?.total_today || 0).toFixed(1)} <span className="text-sm font-bold text-slate-300">KG</span></h3>
                         </div>
                         <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100 shadow-sm transition-transform group-hover:scale-110">
                             <Activity size={24} />
@@ -92,7 +92,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                                 <TrendingUp size={12} /> Predictive Load
                             </p>
                             <h3 className="text-4xl font-black text-slate-950 tracking-tighter">
-                                {predictions ? predictions.prediction.prediction : '--'} <span className="text-sm font-bold text-slate-300">KG</span>
+                                {predictions?.prediction?.prediction || '--'} <span className="text-sm font-bold text-slate-300">KG</span>
                             </h3>
                         </div>
                         <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-600/20 transition-transform group-hover:scale-110">

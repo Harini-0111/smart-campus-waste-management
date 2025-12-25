@@ -16,7 +16,7 @@ const StaffDashboard = () => {
             const res = await axios.get(`${API_URL}/tasks`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
-            setTasks(res.data);
+            setTasks(Array.isArray(res.data) ? res.data : []);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching tasks:', error);

@@ -35,7 +35,7 @@ const Analytics = () => {
                 ]);
 
                 setHistory(h.data || []);
-                setPrediction(p.data.prediction);
+                setPrediction(p?.data?.prediction || null);
                 setHotspots(hs.data || []);
                 setEfficiency(e.data || []);
                 setLoading(false);
@@ -47,7 +47,7 @@ const Analytics = () => {
         fetchData();
     }, []);
 
-    const totalKg = history.reduce((sum, item) => sum + Number(item.quantity_kg), 0);
+    const totalKg = (history || []).reduce((sum, item) => sum + Number(item?.quantity_kg || 0), 0);
 
     const typeData = history.reduce((acc, item) => {
         const name = item.waste_type === 'E-waste' ? 'Electronic' : item.waste_type;
