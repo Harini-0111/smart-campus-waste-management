@@ -22,18 +22,19 @@ const createTransporter = async () => {
 
     console.log(`📧 Transporter init for ${user} (Sanitized Pass: ${pass.length} chars)`);
 
-    // Standard Gmail SMTP config (Port 465 with SSL is usually most stable)
+    // The most robust way for Gmail: use 'service: gmail' but with 
+    // increased timeouts for cloud environments like Render.
     return nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
+        service: 'gmail',
         auth: {
             user: user,
             pass: pass
         },
         pool: true,
-        maxConnections: 5,
-        connectionTimeout: 10000 // 10s
+        maxConnections: 1, // Keep it simple for Hackathon
+        connectionTimeout: 30000, // 30 seconds
+        greetingTimeout: 30000,
+        socketTimeout: 30000
     });
 };
 

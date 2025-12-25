@@ -42,11 +42,10 @@ app.get('/api/v1/health', async (req, res) => {
         const pass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
         if (user && pass) {
             const transporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 465,
-                secure: true,
+                service: 'gmail',
                 auth: { user, pass },
-                connectionTimeout: 5000 // 5s fast test
+                connectionTimeout: 30000,
+                greetingTimeout: 30000
             });
             await transporter.verify();
             emailStatus = 'Connected';
