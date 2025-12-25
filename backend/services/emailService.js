@@ -3,21 +3,12 @@ require('dotenv').config();
 
 // Helper to create transporter depending on environment
 const createTransporter = async () => {
-    // Remove all whitespace from password (Gmail app passwords have spaces)
     const emailPass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
     const emailUser = process.env.EMAIL_USER;
 
-    console.log('\n📧 Email Configuration:');
-    console.log(`   User: ${emailUser ? emailUser.substring(0, 3) + '***' : 'NOT SET'}`);
-    console.log(`   Pass: ${emailPass ? '***' + emailPass.substring(emailPass.length - 4) : 'NOT SET'}`);
-    console.log(`   Environment: ${process.env.NODE_ENV || 'production'}\n`);
-
-    // Check if email credentials are configured
     if (!emailUser || !emailPass) {
-        console.warn('⚠️  Email credentials not configured. Using development mode.');
-        // Use Ethereal for testing when credentials are missing
+        console.warn('⚠️  Email credentials not configured. Using development mode (Ethereal).');
         const testAccount = await nodemailer.createTestAccount();
-        console.log('📧 Using Ethereal test account:', testAccount.user);
         return nodemailer.createTransport({
             host: testAccount.smtp.host,
             port: testAccount.smtp.port,
@@ -29,10 +20,12 @@ const createTransporter = async () => {
         });
     }
 
-    // Production: use Gmail with App Password
-    console.log('📧 Using Gmail SMTP');
+    // Production: use Gmail with robust SMTP settings
+    console.log(`📧 Using Gmail SMTP for: ${emailUser.substring(0, 3)}***${emailUser.substring(emailUser.indexOf('@'))}`);
     return nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // use SSL
         auth: {
             user: emailUser,
             pass: emailPass
@@ -132,21 +125,15 @@ const sendOTPEmail = async (email, otp, name = 'User') => {
             return { success: true, previewUrl, otp };
         }
 
-        console.log(`✅ OTP sent to ${email}`);
-        console.log(`🔐 For testing - OTP: ${otp}\n`);
         return { success: true };
 
     } catch (error) {
         console.error('\n❌ Email sending failed!');
-        console.error('   Error:', error.message);
-        if (error.code) console.error('   Code:', error.code);
-        if (error.command) console.error('   Command:', error.command);
+        console.error('   Error Message:', error.message);
+        console.error('   Error Code:', error.code || 'N/A');
 
-        // Always show OTP in console for testing even if email fails
-        console.log(`\n🔐 FALLBACK - Use this OTP for ${email}: ${otp}\n`);
-
-        // Return success anyway for testing purposes
-        return { success: true, otp, fallback: true };
+        // Re-throw the error so the route handler knows it failed
+        throw error;
     }
 };
 
