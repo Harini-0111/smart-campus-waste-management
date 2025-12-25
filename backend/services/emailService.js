@@ -3,34 +3,19 @@ require('dotenv').config();
 
 // Helper to create transporter depending on environment
 const createTransporter = async () => {
-    const emailPass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
-    const emailUser = process.env.EMAIL_USER;
+}
 
-    if (!emailUser || !emailPass) {
-        console.warn('⚠️  Email credentials not configured. Using development mode (Ethereal).');
-        const testAccount = await nodemailer.createTestAccount();
-        return nodemailer.createTransport({
-            host: testAccount.smtp.host,
-            port: testAccount.smtp.port,
-            secure: testAccount.smtp.secure,
-            auth: {
-                user: testAccount.user,
-                pass: testAccount.pass
-            }
-        });
+// Production: use Gmail with robust SMTP settings
+console.log(`📧 Using Gmail SMTP for: ${emailUser.substring(0, 3)}***${emailUser.substring(emailUser.indexOf('@'))}`);
+return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // use SSL
+    auth: {
+        user: emailUser,
+        pass: emailPass
     }
-
-    // Production: use Gmail with robust SMTP settings
-    console.log(`📧 Using Gmail SMTP for: ${emailUser.substring(0, 3)}***${emailUser.substring(emailUser.indexOf('@'))}`);
-    return nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // use SSL
-        auth: {
-            user: emailUser,
-            pass: emailPass
-        }
-    });
+});
 };
 
 // Generate 6-digit OTP

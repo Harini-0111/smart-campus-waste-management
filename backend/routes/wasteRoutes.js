@@ -181,7 +181,7 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
             );
 
             const recentReports = await db.query(
-                `SELECT w.*, u.full_name as student_name, d.name as department_name 
+                `SELECT w.*, u.full_name as student_name, d.name as location_name 
                  FROM waste_logs w 
                  JOIN users u ON w.student_id = u.id 
                  JOIN departments d ON w.department_id = d.id 
@@ -190,14 +190,29 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
                 req.user.department_id ? [req.user.department_id] : []
             );
 
+            const byLocation = await db.query(
+                `SELECT d.name, COALESCE(SUM(w.quantity_kg), 0) as value
+                 FROM departments d
+                 LEFT JOIN waste_logs w ON d.id = w.department_id
+                 GROUP BY d.name
+                 ORDER BY value DESC`
+            );
+
             dashboardData = {
                 total_today: parseFloat(totalToday.rows[0].total),
                 by_type: byType.rows.map(r => ({
                     name: r.waste_type,
                     value: parseFloat(r.total)
                 })),
+                by_location: byLocation.rows.map(r => ({
+                    name: r.name,
+                    value: parseFloat(r.value)
+                })),
                 pending_reports: parseInt(pendingReports.rows[0].count),
-                recent_reports: recentReports.rows
+                recent: recentReports.rows.map(r => ({
+                    ...r,
+                    location_name: r.location_name // Ensure it matches frontend
+                }))
             };
 
         } else if (req.user.role === 'staff') {

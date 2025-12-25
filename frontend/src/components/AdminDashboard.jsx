@@ -131,7 +131,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
 
                     <div className="h-[420px] w-full flex flex-col md:flex-row gap-16">
                         <div className="flex-1">
-                            {data.by_type.length > 0 ? (
+                            {data?.by_type?.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={data.by_type} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.03)" />
@@ -160,7 +160,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                         <div className="w-full md:w-80 pl-0 md:pl-16 md:border-l border-slate-100">
                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-10">Zone Load Rankings</h4>
                             <div className="space-y-10">
-                                {sortedLocations.length > 0 ? sortedLocations.slice(0, 5).map((loc, i) => (
+                                {sortedLocations?.length > 0 ? sortedLocations.slice(0, 5).map((loc, i) => (
                                     <div key={i} className="group cursor-default">
                                         <div className="flex justify-between mb-3 items-end">
                                             <span className="font-black text-slate-800 text-xs uppercase tracking-tight group-hover:text-slate-950 transition-colors">{loc.name}</span>
@@ -192,7 +192,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                     </div>
 
                     <div className="flex-1 overflow-y-auto scrollbar-hide py-2">
-                        {data.recent.length > 0 ? (
+                        {data?.recent?.length > 0 ? (
                             data.recent.map((log, i) => (
                                 <div key={log.id} className="p-8 flex items-start gap-6 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group cursor-pointer relative">
                                     <div className="absolute inset-y-0 left-0 w-1.5 bg-slate-950 transform -translate-x-full group-hover:translate-x-0 transition-transform"></div>
