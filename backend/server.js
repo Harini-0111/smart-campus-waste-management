@@ -44,6 +44,18 @@ app.get('/api/v1/health', async (req, res) => {
     }
 });
 
+// Temporary Database Initialization Route
+app.post('/api/v1/init-db', async (req, res) => {
+    try {
+        const { initializeSchema } = require('./db/dbSchema');
+        await initializeSchema();
+        res.json({ success: true, message: 'Database schema initialized successfully' });
+    } catch (err) {
+        console.error('Schema Init Error:', err);
+        res.status(500).json({ error: 'Failed to initialize schema', message: err.message });
+    }
+});
+
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
@@ -51,26 +63,6 @@ app.use('/api/v1/upload', uploadRoutes);
 app.use('/api/v1/tasks', taskRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1', wasteRoutes);
-
-// Health check endpoint with DB test
-app.get('/api/v1/health', async (req, res) => {
-    try {
-        const db = require('./db');
-        await db.query('SELECT NOW()');
-        res.json({
-            status: 'success',
-            message: 'Server is running',
-            database: 'connected',
-            timestamp: new Date().toISOString()
-        });
-    } catch (err) {
-        res.status(500).json({
-            status: 'error',
-            message: 'Server is running but database is disconnected',
-            error: err.message
-        });
-    }
-});
 
 // Root route for sanity check
 app.get('/', (req, res) => {
