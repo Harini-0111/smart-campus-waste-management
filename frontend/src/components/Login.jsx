@@ -128,6 +128,7 @@ const Login = () => {
                         {lang === 'en' ? 'EN' : lang === 'hi' ? 'HI' : 'TE'}
                     </button>
                 ))}
+                <span className="hidden sm:inline text-[10px] font-bold text-white/70 ml-2 pr-2">Switch language for easier staff usage</span>
             </div>
 
             <div className="w-full max-w-lg relative z-10">
@@ -141,8 +142,15 @@ const Login = () => {
                     <p className="text-white/90 font-bold uppercase tracking-[0.3em] text-[12px] drop-shadow-md">{t.subtitle}</p>
                 </div>
 
-                {/* Premium Card Section */}
-                <div className="bg-white/10 backdrop-blur-3xl rounded-[3rem] shadow-2xl border border-white/20 p-12 animate-slideUp">
+                {/* Premium Card Section with subtle eco illustrations */}
+                <div className="bg-white/10 backdrop-blur-3xl rounded-[3rem] shadow-2xl border border-white/20 p-12 animate-slideUp relative overflow-hidden">
+                    {/* Decorative leaf illustrations */}
+                    <svg aria-hidden="true" className="absolute -left-6 -top-6 w-24 h-24 opacity-10" viewBox="0 0 100 100">
+                        <path d="M50 5 C20 20, 10 50, 25 75 C40 95, 70 85, 85 65 C95 50, 90 25, 70 15 Z" fill="#669B65" />
+                    </svg>
+                    <svg aria-hidden="true" className="absolute -right-8 -bottom-8 w-28 h-28 opacity-10" viewBox="0 0 100 100">
+                        <path d="M55 10 C35 25, 30 55, 45 80 C60 95, 80 85, 90 60 C95 45, 85 25, 70 15 Z" fill="#4A7C7E" />
+                    </svg>
                     {!isRegister ? (
                         // LOGIN FORM
                         <form onSubmit={handleLogin} className="space-y-8">
@@ -163,6 +171,7 @@ const Login = () => {
                                             value={username}
                                             onChange={(e) => setUsername(e.target.value)}
                                         />
+                                        <p className="mt-2 text-[10px] text-white/60 font-bold ml-1">Use your assigned campus ID</p>
                                     </div>
                                 </div>
 
@@ -185,6 +194,7 @@ const Login = () => {
                                         >
                                             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
+                                        <p className="mt-2 text-[10px] text-white/60 font-bold ml-1">Minimum 8 characters for security</p>
                                     </div>
                                 </div>
                             </div>

@@ -83,6 +83,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                             <Activity size={24} />
                         </div>
                     </div>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-3">Live Waste Tracking — real-time campus reports</p>
                 </div>
 
                 {/* Segregation Score */}
@@ -99,6 +100,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                     <div className="mt-4 w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-50">
                         <div className="bg-gradient-to-r from-blue-400 to-indigo-500 h-full rounded-full transition-all duration-1000" style={{ width: `${segregationScore}%` }}></div>
                     </div>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-3">Segregation quality based on category accuracy</p>
                 </div>
 
                 {/* ML Forecast Card with Tooltip */}
@@ -117,7 +119,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                             <TrendingUp size={24} />
                         </div>
                     </div>
-                    <p className="text-[10px] font-bold text-indigo-400 mt-3 uppercase tracking-tighter">AI-assisted estimation using historical data</p>
+                    <p className="text-[10px] font-bold text-indigo-400 mt-3 uppercase tracking-tighter">AI Predictions — smart estimation of daily waste load</p>
                 </div>
 
                 {/* Risk Card */}
@@ -139,6 +141,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                             <AlertTriangle size={24} />
                         </div>
                     </div>
+                    <p className="text-[10px] text-slate-500 font-semibold mt-3">AI-assisted risk assessment for potential overflow</p>
                 </div>
             </div>
 

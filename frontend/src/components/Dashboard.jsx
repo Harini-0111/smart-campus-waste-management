@@ -49,7 +49,14 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
     const maxLocValue = sortedLocations[0]?.value || 1;
 
     return (
-        <div className="space-y-6 pb-12 animate-fadeIn text-slate-800">
+        <div className="space-y-8 pb-12 animate-fadeIn text-slate-800">
+            {/* Overview Section */}
+            <div className="flex items-end justify-between">
+                <div>
+                    <h2 className="text-4xl font-black tracking-tighter text-slate-900">Overview</h2>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Live Waste Tracking — View real-time waste reports from campus zones</p>
+                </div>
+            </div>
 
             {/* Top Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -131,6 +138,17 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                 </div>
             </div>
 
+            {/* Analytics & Real-time Updates */}
+            <div className="flex items-end justify-between mt-2">
+                <div>
+                    <h2 className="text-3xl font-black tracking-tight text-slate-900">Analytics Dashboard</h2>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Visual insights by waste type and location</p>
+                </div>
+                <div className="hidden md:flex items-center gap-2 px-2 py-1 bg-indigo-100 text-indigo-600 rounded-full" title="AI-assisted">
+                    <span className="text-[10px] font-black uppercase">Smart Insights</span>
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* Main Chart Section (2 cols) */}
@@ -209,8 +227,8 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-0 flex flex-col h-full overflow-hidden">
                     <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
                         <div>
-                            <h3 className="font-bold text-slate-800">Live Feed</h3>
-                            <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Latest entries</p>
+                            <h3 className="font-bold text-slate-800">Real-time Updates</h3>
+                            <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Latest entries from campus zones</p>
                         </div>
                         <div className="relative flex h-2.5 w-2.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>

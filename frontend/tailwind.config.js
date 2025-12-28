@@ -14,7 +14,7 @@ export default {
                 light: "#F9FAFB"
             },
             fontFamily: {
-                sans: ['Inter', 'system-ui', 'sans-serif'],
+                sans: ['Manrope', 'system-ui', 'sans-serif'],
             },
             animation: {
                 fadeIn: 'fadeIn 0.5s ease-in-out',
