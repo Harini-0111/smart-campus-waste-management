@@ -1,0 +1,29 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Waste Bin Body (Green) -->
+  <ellipse cx="100" cy="100" rx="45" ry="50" fill="#10B981"/>
+  
+  <!-- Bin Lid (Dark) -->
+  <rect x="70" y="40" width="60" height="20" rx="5" fill="#1F2937"/>
+  
+  <!-- Bin Handle (Light Blue) -->
+  <path d="M 80 45 Q 100 20 120 45" stroke="#06B6D4" stroke-width="6" fill="none" stroke-linecap="round"/>
+  
+  <!-- Wheels -->
+  <circle cx="75" cy="155" r="8" fill="#1F2937"/>
+  <circle cx="125" cy="155" r="8" fill="#1F2937"/>
+  
+  <!-- Happy Face Eyes -->
+  <circle cx="85" cy="85" r="5" fill="#FFFFFF"/>
+  <circle cx="115" cy="85" r="5" fill="#FFFFFF"/>
+  <circle cx="85" cy="85" r="3" fill="#1F2937"/>
+  <circle cx="115" cy="85" r="3" fill="#1F2937"/>
+  
+  <!-- Happy Smile -->
+  <path d="M 85 105 Q 100 115 115 105" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <!-- Thumbs Up -->
+  <g transform="translate(-80, 0)">
+    <rect x="150" y="70" width="12" height="40" rx="6" fill="#FFFFFF"/>
+    <circle cx="156" cy="65" r="8" fill="#FFFFFF"/>
+  </g>
+</svg>
