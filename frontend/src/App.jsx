@@ -120,4 +120,9 @@ function App() {
   );
 }
 
+// Debug version if nothing renders
+if (!document.getElementById('root')) {
+  console.error('Root element not found');
+}
+
 export default App;

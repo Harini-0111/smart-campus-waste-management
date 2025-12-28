@@ -59,9 +59,20 @@ export const AuthProvider = ({ children }) => {
         role: user?.role
     };
 
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-12 h-12 rounded-full border-4 border-slate-700 border-t-emerald-500 animate-spin mx-auto mb-4"></div>
+                    <p className="text-slate-400 font-semibold">Initializing...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };
