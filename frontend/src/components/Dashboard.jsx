@@ -136,9 +136,17 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                 {/* Main Chart Section (2 cols) */}
                 <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-slate-800 text-lg">Waste Composition Analysis</h3>
+                        <div>
+                            <h3 className="font-bold text-slate-800 text-lg">Waste Composition Analysis</h3>
+                            <p className="text-[10px] text-slate-400 font-semibold mt-1">Real-time breakdown by category</p>
+                        </div>
                         <div className="flex gap-2">
-                            <button onClick={onViewHistory} className="text-xs font-semibold px-3 py-1.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">View Data</button>
+                            <button onClick={onViewHistory} className="text-xs font-semibold px-4 py-2 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">
+                                <div className="text-center">
+                                    <div>View Data</div>
+                                    <div className="text-[8px] text-slate-400">Full history</div>
+                                </div>
+                            </button>
                         </div>
                     </div>
 
@@ -162,8 +170,12 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <div className="h-full flex items-center justify-center text-slate-400 text-sm font-medium bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                                    No data recorded today
+                                <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm font-medium bg-slate-50 rounded-lg border border-dashed border-slate-200 gap-3 p-6">
+                                    <BarChart3 size={40} className="opacity-30" />
+                                    <div className="text-center">
+                                        <p className="font-bold mb-1">No data recorded today</p>
+                                        <p className="text-xs text-slate-300">Start logging to see charts</p>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -183,7 +195,10 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                                         </div>
                                     </div>
                                 )) : (
-                                    <p className="text-xs text-slate-400 text-center py-4">No location data</p>
+                                    <div className="text-center py-6">
+                                        <p className="text-xs text-slate-400 font-semibold">No location data</p>
+                                        <p className="text-[10px] text-slate-300 mt-1">Log waste to see zones</p>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -193,7 +208,10 @@ const Dashboard = ({ refreshTrigger, onViewHistory }) => {
                 {/* Recent Activity Feed (1 col) */}
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-0 flex flex-col h-full overflow-hidden">
                     <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
-                        <h3 className="font-bold text-slate-800">Live Feed</h3>
+                        <div>
+                            <h3 className="font-bold text-slate-800">Live Feed</h3>
+                            <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Latest entries</p>
+                        </div>
                         <div className="relative flex h-2.5 w-2.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>

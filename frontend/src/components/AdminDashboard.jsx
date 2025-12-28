@@ -101,13 +101,13 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                     </div>
                 </div>
 
-                {/* ML Forecast Card */}
-                <div className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-md hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-indigo-50/40 to-white relative overflow-hidden group">
+                {/* ML Forecast Card with Tooltip */}
+                <div className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-md hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-indigo-50/40 to-white relative overflow-hidden group" title="AI-estimated waste for tomorrow based on historical data">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 -mr-12 -mt-12 rounded-full transform group-hover:scale-150 transition-transform duration-700"></div>
                     <div className="flex justify-between items-start relative z-10">
                         <div>
                             <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded w-fit mb-2 flex items-center gap-1">
-                                <Activity size={12} /> Forecast
+                                <Activity size={12} /> Predictive Load
                             </p>
                             <h3 className="text-4xl font-black text-indigo-900 tracking-tight">
                                 {predictions ? `${predictions.prediction.prediction}` : '--'} <span className="text-lg font-bold text-indigo-300">kg</span>
@@ -117,7 +117,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                             <TrendingUp size={24} />
                         </div>
                     </div>
-                    <p className="text-[10px] font-bold text-indigo-400 mt-2 uppercase tracking-tighter">Predicted for Tomorrow</p>
+                    <p className="text-[10px] font-bold text-indigo-400 mt-3 uppercase tracking-tighter">AI-assisted estimation using historical data</p>
                 </div>
 
                 {/* Risk Card */}
@@ -150,8 +150,11 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                             <h3 className="font-extrabold text-slate-800 text-xl tracking-tight">Waste Composition</h3>
                             <p className="text-xs text-slate-400 font-medium">Real-time breakdown by category</p>
                         </div>
-                        <button onClick={onViewHistory} className="text-xs font-bold px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl transition-all transform hover:-translate-y-0.5 shadow-lg shadow-slate-200">
-                            Full Database
+                        <button onClick={onViewHistory} className="text-xs font-bold px-5 py-3 bg-slate-900 text-white hover:bg-slate-800 rounded-xl transition-all transform hover:-translate-y-0.5 shadow-lg shadow-slate-200">
+                            <div className="flex flex-col items-center">
+                                <span>Full Database</span>
+                                <span className="text-[8px] text-slate-400 font-medium mt-0.5">View all records</span>
+                            </div>
                         </button>
                     </div>
 
@@ -175,8 +178,12 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <div className="h-full flex items-center justify-center text-slate-400 text-sm font-bold bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                                    Awaiting collection data...
+                                <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm font-bold bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 gap-3 p-6">
+                                    <BarChart3 size={40} className="opacity-30" />
+                                    <div className="text-center">
+                                        <p className="font-bold mb-1">No Data Available</p>
+                                        <p className="text-xs text-slate-400 font-medium">Start logging waste to see composition</p>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -196,17 +203,23 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                                         </div>
                                     </div>
                                 )) : (
-                                    <p className="text-xs text-slate-400 text-center py-4 italic font-medium">No active collections</p>
+                                    <div className="text-center py-8 px-4">
+                                        <p className="text-xs text-slate-400 font-semibold mb-1">No location data yet</p>
+                                        <p className="text-[10px] text-slate-300 font-medium">Log waste to see hotspots</p>
+                                    </div>
                                 )}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Activity Feed */}
+                {/* Activity Feed with Tooltip */}
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-0 flex flex-col h-[522px] overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                        <h3 className="font-black text-slate-800 uppercase tracking-tight">Live Intelligence</h3>
+                    <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50" title="Real-time waste entries as they happen">
+                        <div>
+                            <h3 className="font-black text-slate-800 uppercase tracking-tight">Live Intelligence</h3>
+                            <p className="text-[9px] text-slate-400 font-semibold mt-1">Real-time waste entries</p>
+                        </div>
                         <div className="flex items-center gap-2 px-2 py-1 bg-emerald-100 text-emerald-600 rounded-full">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -252,9 +265,12 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                                 </div>
                             ))
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
-                                <ImageIcon size={48} className="opacity-20 stroke-[1.5]" />
-                                <p className="text-sm font-bold uppercase tracking-widest opacity-40">No Activity Detected</p>
+                            <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4 p-8">
+                                <ImageIcon size={56} className="opacity-20 stroke-[1.5]" />
+                                <div className="text-center">
+                                    <p className="text-sm font-bold uppercase tracking-widest opacity-60 mb-2">No Activity Yet</p>
+                                    <p className="text-xs text-slate-400 font-medium">Waste entries will appear here in real-time</p>
+                                </div>
                             </div>
                         )}
                     </div>

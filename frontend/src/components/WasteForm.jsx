@@ -11,6 +11,25 @@ const WasteForm = ({ onEntryAdded }) => {
     const [loading, setLoading] = useState(false);
     const [preview, setPreview] = useState(null);
     const [file, setFile] = useState(null);
+    const [suggestedType, setSuggestedType] = useState(null);
+
+    // Keyword-based waste type detection
+    const wasteKeywords = {
+        'Wet': ['food', 'scrap', 'organic', 'vegetable', 'fruit', 'leftover', 'peel', 'kitchen', 'compost'],
+        'Dry': ['paper', 'cardboard', 'wrapper', 'tissue', 'napkin', 'box', 'bag', 'document'],
+        'Recyclable': ['plastic', 'bottle', 'can', 'glass', 'metal', 'aluminum', 'container', 'packaging'],
+        'E-waste': ['battery', 'wire', 'cable', 'electronic', 'charger', 'phone', 'computer', 'device']
+    };
+
+    const detectWasteType = (text) => {
+        const lowerText = text.toLowerCase();
+        for (const [type, keywords] of Object.entries(wasteKeywords)) {
+            if (keywords.some(keyword => lowerText.includes(keyword))) {
+                return type;
+            }
+        }
+        return null;
+    };
 
     useEffect(() => {
         axios.get(`${API_URL}/locations`)
@@ -51,6 +70,23 @@ const WasteForm = ({ onEntryAdded }) => {
         setFormData({ ...formData, image_url: '' });
     };
 
+    const handleDescriptionChange = (e) => {
+        const newDescription = e.target.value;
+        setFormData({ ...formData, description: newDescription });
+        
+        // Auto-suggest waste type based on keywords
+        if (newDescription.length > 3) {
+            const detected = detectWasteType(newDescription);
+            if (detected && detected !== formData.waste_type) {
+                setSuggestedType(detected);
+            } else {
+                setSuggestedType(null);
+            }
+        } else {
+            setSuggestedType(null);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.location_id) return;
@@ -77,6 +113,7 @@ const WasteForm = ({ onEntryAdded }) => {
             setFormData({ location_id: '', waste_type: 'Dry', quantity_kg: '', image_url: '', description: '' });
             setPreview(null);
             setFile(null);
+            setSuggestedType(null);
             if (onEntryAdded) onEntryAdded();
         } catch (error) {
             console.error('Error submitting form:', error);
@@ -143,7 +180,7 @@ const WasteForm = ({ onEntryAdded }) => {
                     </div>
 
                     {/* Quantity & Image Row */}
-                    <div className="grid grid-cols-2 gap-8">
+                    <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-3">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mass Magnitude <span className="text-red-500">*</span></label>
                             <div className="relative">
@@ -159,6 +196,7 @@ const WasteForm = ({ onEntryAdded }) => {
                                 />
                                 <span className="absolute right-6 top-5 text-slate-400 text-[10px] font-black uppercase">KG</span>
                             </div>
+                            <p className="text-[9px] text-slate-400 font-medium ml-1">Enter weight in kilograms</p>
                         </div>
 
                         <div className="space-y-3">
@@ -187,16 +225,35 @@ const WasteForm = ({ onEntryAdded }) => {
                         </div>
                     </div>
 
-                    {/* Description */}
+                    {/* Description with Smart Detection */}
                     <div className="space-y-3">
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Observational Notes</label>
-                        <textarea
-                            placeholder="Add details about the waste (e.g., specific bin location, odor, type details)..."
-                            className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800 font-bold placeholder:text-slate-200 hover:bg-white resize-none"
-                            rows="2"
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        ></textarea>
+                        <div className="relative">
+                            <textarea
+                                placeholder="e.g., plastic bottles from cafeteria, food scraps from hostel..."  
+                                className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800 font-bold placeholder:text-slate-300 placeholder:font-medium hover:bg-white resize-none"
+                                rows="3"
+                                value={formData.description}
+                                onChange={handleDescriptionChange}
+                            ></textarea>
+                            {suggestedType && (
+                                <div className="mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-between animate-slideUp">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-semibold text-indigo-600">💡 Detected: {suggestedType} waste</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setFormData({ ...formData, waste_type: suggestedType });
+                                            setSuggestedType(null);
+                                        }}
+                                        className="text-[10px] font-bold px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all uppercase tracking-wider"
+                                    >
+                                        Apply
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Action */}

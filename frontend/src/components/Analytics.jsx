@@ -58,10 +58,10 @@ const Analytics = () => {
 
     return (
         <div className="space-y-10 animate-fadeIn pb-24 max-w-6xl mx-auto px-4">
-            <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-4">
+            <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-6">
                 <div>
                     <h2 className="text-5xl font-black text-slate-900 tracking-tighter mb-3 leading-none">Deep Analytics</h2>
-                    <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Verifiable Campus Sustainability Telemetry</p>
+                    <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Historical data insights and trends</p>
                 </div>
                 <div className="flex gap-6">
                     <div className="bg-white px-8 py-5 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col items-center min-w-[160px] animate-slideUp stagger-1">
@@ -78,53 +78,83 @@ const Analytics = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Waste Type Distribution */}
                 <div className="card-premium p-10 h-[500px] flex flex-col stagger-3">
-                    <h3 className="font-black text-slate-900 text-xl tracking-tight mb-10 flex items-center gap-3">
-                        <div className="w-2 h-8 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/20"></div>
-                        Composition Audit
-                    </h3>
-                    <div className="flex-1">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={typeData}
-                                    innerRadius={90}
-                                    outerRadius={140}
-                                    paddingAngle={10}
-                                    dataKey="value"
-                                    stroke="none"
-                                >
-                                    {typeData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[entry.name] || '#94A3B8'} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)', padding: '20px', fontWeight: '900', fontSize: '12px' }}
-                                />
-                                <Legend verticalAlign="bottom" height={48} iconType="circle" wrapperStyle={{ fontWeight: 'black', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '1.5px', color: '#64748b', paddingTop: '20px' }} />
-                            </PieChart>
-                        </ResponsiveContainer>
+                    <div>
+                        <h3 className="font-black text-slate-900 text-xl tracking-tight flex items-center gap-3">
+                            <div className="w-2 h-8 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/20"></div>
+                            Composition Audit
+                        </h3>
+                        <p className="text-[10px] text-slate-400 font-semibold ml-7 mt-1">Distribution by waste category</p>
+                    </div>
+                    <div className="flex-1 mt-6">
+                        {typeData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={typeData}
+                                        innerRadius={90}
+                                        outerRadius={140}
+                                        paddingAngle={10}
+                                        dataKey="value"
+                                        stroke="none"
+                                    >
+                                        {typeData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[entry.name] || '#94A3B8'} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)', padding: '20px', fontWeight: '900', fontSize: '12px' }}
+                                    />
+                                    <Legend verticalAlign="bottom" height={48} iconType="circle" wrapperStyle={{ fontWeight: 'black', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '1.5px', color: '#64748b', paddingTop: '20px' }} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center gap-4">
+                                <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center">
+                                    <span className="text-4xl text-slate-300">📈</span>
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-sm font-bold text-slate-400 mb-1">No composition data yet</p>
+                                    <p className="text-xs text-slate-300 font-medium">Add waste logs to see breakdown</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Location Comparison */}
                 <div className="card-premium p-10 h-[500px] flex flex-col stagger-4">
-                    <h3 className="font-black text-slate-900 text-xl tracking-tight mb-10 flex items-center gap-3">
-                        <div className="w-2 h-8 bg-blue-500 rounded-full shadow-lg shadow-blue-500/20"></div>
-                        Zone Efficiency Benchmark
-                    </h3>
-                    <div className="flex-1">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={locationData} margin={{ top: 0, right: 30, left: 30, bottom: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: '900', fill: '#94A3B8' }} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: '900', fill: '#94A3B8' }} />
-                                <Tooltip
-                                    cursor={{ fill: '#f8fafc', radius: 10 }}
-                                    contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)', padding: '20px' }}
-                                />
-                                <Bar dataKey="value" fill="#6366f1" radius={[10, 10, 10, 10]} barSize={45} />
-                            </BarChart>
-                        </ResponsiveContainer>
+                    <div>
+                        <h3 className="font-black text-slate-900 text-xl tracking-tight flex items-center gap-3">
+                            <div className="w-2 h-8 bg-blue-500 rounded-full shadow-lg shadow-blue-500/20"></div>
+                            Zone Efficiency Benchmark
+                        </h3>
+                        <p className="text-[10px] text-slate-400 font-semibold ml-7 mt-1">Waste generation by location</p>
+                    </div>
+                    <div className="flex-1 mt-6">
+                        {locationData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={locationData} margin={{ top: 0, right: 30, left: 30, bottom: 20 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: '900', fill: '#94A3B8' }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: '900', fill: '#94A3B8' }} />
+                                    <Tooltip
+                                        cursor={{ fill: '#f8fafc', radius: 10 }}
+                                        contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)', padding: '20px' }}
+                                    />
+                                    <Bar dataKey="value" fill="#6366f1" radius={[10, 10, 10, 10]} barSize={45} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center gap-4">
+                                <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center">
+                                    <span className="text-4xl text-slate-300">📍</span>
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-sm font-bold text-slate-400 mb-1">No location data yet</p>
+                                    <p className="text-xs text-slate-300 font-medium">Add waste logs to compare zones</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
