@@ -62,6 +62,7 @@ const Analytics = () => {
                 <div>
                     <h2 className="text-5xl font-black text-slate-900 tracking-tighter mb-3 leading-none">Deep Analytics</h2>
                     <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Historical data insights and trends</p>
+                    <p className="text-[11px] text-slate-500 font-semibold mt-2">AI-assisted • Smart insights by waste type and location</p>
                 </div>
                 <div className="flex gap-6">
                     <div className="bg-white px-8 py-5 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col items-center min-w-[160px] animate-slideUp stagger-1">
@@ -77,13 +78,18 @@ const Analytics = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Waste Type Distribution */}
-                <div className="card-premium p-10 h-[500px] flex flex-col stagger-3">
+                <div className="card-premium p-10 h-[500px] flex flex-col stagger-3 bg-gradient-to-br from-[#F2F7F3] via-white to-[#E8F1EF]">
                     <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-50 px-2 py-1 rounded-full">AI-assisted</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Smart Insights</span>
+                        </div>
                         <h3 className="font-black text-slate-900 text-xl tracking-tight flex items-center gap-3">
                             <div className="w-2 h-8 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/20"></div>
                             Composition Audit
                         </h3>
-                        <p className="text-[10px] text-slate-400 font-semibold ml-7 mt-1">Distribution by waste category</p>
+                        <p className="text-[10px] text-slate-500 font-semibold ml-7 mt-1">Live distribution by waste category</p>
+                        <p className="text-[11px] text-slate-500 font-medium ml-7 mt-1">Understand what types dominate today so teams act fast.</p>
                     </div>
                     <div className="flex-1 mt-6">
                         {typeData.length > 0 ? (
@@ -122,13 +128,17 @@ const Analytics = () => {
                 </div>
 
                 {/* Location Comparison */}
-                <div className="card-premium p-10 h-[500px] flex flex-col stagger-4">
+                <div className="card-premium p-10 h-[500px] flex flex-col stagger-4 bg-gradient-to-br from-[#EEF4F8] via-white to-[#E8EDF5]">
                     <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">Smart Insights</span>
+                        </div>
                         <h3 className="font-black text-slate-900 text-xl tracking-tight flex items-center gap-3">
                             <div className="w-2 h-8 bg-blue-500 rounded-full shadow-lg shadow-blue-500/20"></div>
                             Zone Efficiency Benchmark
                         </h3>
-                        <p className="text-[10px] text-slate-400 font-semibold ml-7 mt-1">Waste generation by location</p>
+                        <p className="text-[10px] text-slate-500 font-semibold ml-7 mt-1">Waste generation by location</p>
+                        <p className="text-[11px] text-slate-500 font-medium ml-7 mt-1">Compare hotspots to deploy staff where it matters most.</p>
                     </div>
                     <div className="flex-1 mt-6">
                         {locationData.length > 0 ? (

@@ -124,7 +124,7 @@ const WasteForm = ({ onEntryAdded }) => {
     };
 
     return (
-        <div className="max-w-xl mx-auto animate-slideUp">
+        <div className="max-w-xl mx-auto animate-slideUp px-4 sm:px-0">
             <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-200 overflow-hidden ring-1 ring-slate-900/5">
                 <div className="px-10 py-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                     <div>
@@ -154,6 +154,7 @@ const WasteForm = ({ onEntryAdded }) => {
                             </select>
                             <ChevronDown className="absolute right-6 top-5 text-slate-400 pointer-events-none group-hover:text-slate-600 transition-colors" size={18} />
                         </div>
+                        <p className="text-[10px] text-slate-500 font-semibold ml-1">Choose the closest collection point for accuracy.</p>
                     </div>
 
                     {/* Waste Type */}
@@ -177,6 +178,7 @@ const WasteForm = ({ onEntryAdded }) => {
                                 </div>
                             ))}
                         </div>
+                        <p className="text-[10px] text-slate-500 font-semibold ml-1">Tip: Pick the closest match. AI suggestions appear from your notes.</p>
                     </div>
 
                     {/* Quantity & Image Row */}
@@ -222,6 +224,7 @@ const WasteForm = ({ onEntryAdded }) => {
                                     </button>
                                 </div>
                             )}
+                            <p className="text-[10px] text-slate-500 font-semibold ml-1">Optional photo helps audits; small files upload faster.</p>
                         </div>
                     </div>
 
@@ -254,6 +257,7 @@ const WasteForm = ({ onEntryAdded }) => {
                                 </div>
                             )}
                         </div>
+                        <p className="text-[10px] text-slate-500 font-semibold ml-1">AI suggestions adapt as you type common keywords.</p>
                     </div>
 
                     {/* Action */}
@@ -261,10 +265,11 @@ const WasteForm = ({ onEntryAdded }) => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-5 text-[10px] font-black uppercase tracking-[0.2em] bg-slate-900 hover:bg-slate-800 text-white rounded-[1.5rem] shadow-2xl shadow-slate-200 hover:-translate-y-1 transition-all flex items-center justify-center gap-4 disabled:opacity-50 disabled:transform-none"
+                            className="w-full py-5 text-[12px] font-black uppercase tracking-[0.2em] bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-[1.5rem] shadow-2xl shadow-emerald-200 hover:-translate-y-1 transition-all flex items-center justify-center gap-4 disabled:opacity-50 disabled:transform-none"
                         >
                             {loading ? 'Initializing Stream...' : <>Commit Log <Send size={18} /></>}
                         </button>
+                        <p className="text-[10px] text-slate-500 font-semibold mt-2 text-center">Large tap targets for tablet/mobile staff entry.</p>
                     </div>
                 </form>
             </div>
