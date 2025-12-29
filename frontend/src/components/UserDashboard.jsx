@@ -1,14 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import WasteForm from './WasteForm';
-import { LayoutGrid, Leaf, Award, ArrowRight, History, Recycle } from 'lucide-react';
+import { LayoutGrid, Leaf, Award, ArrowRight, History, Recycle, TrendingUp } from 'lucide-react';
 import axios from 'axios';
+import { API_URL } from '../config';
+import { calculateEnvironmentalImpact, calculateEcoLevel, calculateImpactPoints, formatMetric } from '../utils/environmentalImpact';
 
 const UserDashboard = () => {
     const [view, setView] = useState('home'); // 'home' | 'log'
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchUserStats();
+    }, [view]); // Refresh when returning home
+
+    const fetchUserStats = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${API_URL}/users/me/stats`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setStats(res.data);
+        } catch (err) {
+            console.error('Failed to fetch user stats:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleEntryAdded = () => {
         setView('home');
+        fetchUserStats(); // Refresh stats after new entry
     };
+
+    // Calculate environmental impact from user's actual data
+    const impact = stats ? calculateEnvironmentalImpact(stats.total_waste_kg, stats.by_type) : null;
+    const ecoLevel = stats ? calculateEcoLevel(stats.total_waste_kg) : 'I';
+    const impactPoints = stats ? calculateImpactPoints(stats.total_waste_kg, stats.total_logs) : 0;
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-12 animate-fadeIn max-w-5xl mx-auto pb-24 px-4">
@@ -35,7 +71,12 @@ const UserDashboard = () => {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Impact Points</p>
-                                        <h4 className="text-3xl font-black tabular-nums">1,542</h4>
+                                        <h4 className="text-3xl font-black tabular-nums">{impactPoints.toLocaleString()}</h4>
+                                        {stats.total_waste_kg > 0 && (
+                                            <p className="text-[9px] text-emerald-300 font-semibold mt-1 flex items-center gap-1">
+                                                <TrendingUp size={10} /> {stats.total_waste_kg.toFixed(1)}kg logged
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="bg-white/5 backdrop-blur-2xl rounded-3xl p-6 border border-white/10 shadow-2xl flex items-center gap-5 hover:bg-white/10 transition-all stagger-2">
@@ -44,7 +85,13 @@ const UserDashboard = () => {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Eco Level</p>
-                                        <h4 className="text-3xl font-black tabular-nums">IV</h4>
+                                        <h4 className="text-3xl font-black tabular-nums">{ecoLevel}</h4>
+                                        <div className="mt-2 w-24 bg-white/10 rounded-full h-1 overflow-hidden">
+                                            <div 
+                                                className="bg-blue-400 h-1 rounded-full transition-all duration-500"
+                                                style={{ width: `${Math.min((stats.total_waste_kg / 100) * 100, 100)}%` }}
+                                            ></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -88,20 +135,65 @@ const UserDashboard = () => {
                             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Environmental Intelligence</h3>
                             <span className="h-px flex-1 bg-slate-200 mb-3 rounded-full opacity-50"></span>
                         </div>
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                            {[
-                                { label: 'Trees Protected', val: '12', icon: '🌳', color: 'text-emerald-500', bg: 'bg-emerald-50' },
-                                { label: 'Carbon Offset', val: '8.4kg', icon: '☁️', color: 'text-blue-500', bg: 'bg-blue-50' },
-                                { label: 'Energy Conserved', val: '42kWh', icon: '⚡', color: 'text-indigo-500', bg: 'bg-indigo-50' },
-                                { label: 'Water Purified', val: '150L', icon: '💧', color: 'text-sky-500', bg: 'bg-sky-50' },
-                            ].map((stat, i) => (
-                                <div key={i} className="bg-white p-8 rounded-[2rem] border border-slate-200/60 hover:border-slate-300 shadow-sm hover:shadow-2xl transition-all text-center group flex flex-col items-center stagger-3">
-                                    <div className={`w-14 h-14 ${stat.bg} rounded-2xl flex items-center justify-center text-2xl mb-4 shadow-inner transform group-hover:-translate-y-1 transition-transform`}>{stat.icon}</div>
-                                    <p className={`text-4xl font-black ${stat.color} mb-2 tracking-tighter tabular-nums`}>{stat.val}</p>
-                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{stat.label}</p>
-                                </div>
-                            ))}
-                        </div>
+                        {impact && stats.total_waste_kg > 0 ? (
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                                {[
+                                    { 
+                                        label: 'Trees Protected', 
+                                        val: formatMetric(impact.trees), 
+                                        icon: '🌳', 
+                                        color: 'text-emerald-500', 
+                                        bg: 'bg-emerald-50',
+                                        subtitle: impact.equivalents.treesEquivalent > 0 ? `${impact.equivalents.treesEquivalent} yr CO₂` : null
+                                    },
+                                    { 
+                                        label: 'Carbon Offset', 
+                                        val: formatMetric(impact.carbonKg, 'kg'), 
+                                        icon: '☁️', 
+                                        color: 'text-blue-500', 
+                                        bg: 'bg-blue-50',
+                                        subtitle: `${impact.equivalents.treesEquivalent} trees/yr`
+                                    },
+                                    { 
+                                        label: 'Energy Conserved', 
+                                        val: formatMetric(impact.energyKwh, 'kWh'), 
+                                        icon: '⚡', 
+                                        color: 'text-indigo-500', 
+                                        bg: 'bg-indigo-50',
+                                        subtitle: `${impact.equivalents.homeDaysEquivalent} home days`
+                                    },
+                                    { 
+                                        label: 'Water Purified', 
+                                        val: formatMetric(impact.waterLiters, 'L'), 
+                                        icon: '💧', 
+                                        color: 'text-sky-500', 
+                                        bg: 'bg-sky-50',
+                                        subtitle: `${impact.equivalents.personDaysEquivalent} person days`
+                                    },
+                                ].map((stat, i) => (
+                                    <div key={i} className="bg-white p-8 rounded-[2rem] border border-slate-200/60 hover:border-slate-300 shadow-sm hover:shadow-2xl transition-all text-center group flex flex-col items-center stagger-3">
+                                        <div className={`w-14 h-14 ${stat.bg} rounded-2xl flex items-center justify-center text-2xl mb-4 shadow-inner transform group-hover:-translate-y-1 transition-transform`}>{stat.icon}</div>
+                                        <p className={`text-4xl font-black ${stat.color} mb-2 tracking-tighter tabular-nums`}>{stat.val}</p>
+                                        <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">{stat.label}</p>
+                                        {stat.subtitle && (
+                                            <p className="text-[8px] text-slate-300 font-semibold">≈ {stat.subtitle}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-white p-16 rounded-[2rem] border border-slate-200/60 shadow-sm text-center">
+                                <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto opacity-50">🌱</div>
+                                <h3 className="text-2xl font-black text-slate-800 mb-3">Start Your Impact Journey</h3>
+                                <p className="text-slate-500 font-medium max-w-md mx-auto mb-8">Log your first waste collection to unlock real environmental metrics calculated from actual data.</p>
+                                <button 
+                                    onClick={() => setView('log')}
+                                    className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-wider text-sm transition-all shadow-lg shadow-emerald-500/30"
+                                >
+                                    Initialize Reporting
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             ) : (
