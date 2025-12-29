@@ -13,7 +13,7 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [isRegister, setIsRegister] = useState(false);
     const [language, setLanguage] = useState('en');
-    const [registerData, setRegisterData] = useState({ username: '', email: '', password: '', role: 'student', location_id: '' });
+    const [registerData, setRegisterData] = useState({ username: '', email: '', password: '', role: 'student', location_id: '', department_id: '' });
     const [otp, setOtp] = useState('');
     const [otpStatus, setOtpStatus] = useState('');
     const [otpVerified, setOtpVerified] = useState(false);
@@ -138,6 +138,7 @@ const Login = () => {
                 password: registerData.password,
                 role: registerData.role,
                 location_id: registerData.location_id || null,
+                department_id: registerData.department_id || null,
                 otp
             });
 
@@ -285,12 +286,12 @@ const Login = () => {
                         </form>
                     ) : (
                         // REGISTER FORM
-                        <form onSubmit={handleRegister} className="space-y-8">
-                            <div className="text-center mb-10">
-                                <p className="text-white font-bold text-2xl drop-shadow-md">{t.createAccount}</p>
+                        <form onSubmit={handleRegister} className="space-y-5">
+                            <div className="text-center mb-6">
+                                <p className="text-white font-bold text-xl drop-shadow-md">{t.createAccount}</p>
                             </div>
 
-                            <div className="space-y-7">
+                            <div className="space-y-4">
                                 <div className="relative group">
                                     <label className="block text-[11px] font-black text-white/70 uppercase tracking-widest mb-3 ml-1">{t.accessId}</label>
                                     <div className="relative">
@@ -298,7 +299,7 @@ const Login = () => {
                                         <input
                                             type="text"
                                             required
-                                            className="w-full bg-emerald-50/5 border border-emerald-200/30 text-emerald-50 p-4 pl-14 rounded-2xl focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-300/60 outline-none transition-all placeholder:text-emerald-100/40 font-semibold"
+                                            className="w-full bg-emerald-50/5 border border-emerald-200/30 text-emerald-50 p-3 pl-14 rounded-2xl focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-300/60 outline-none transition-all placeholder:text-emerald-100/40 font-semibold"
                                             placeholder="Username"
                                             value={registerData.username}
                                             onChange={(e) => setRegisterData({...registerData, username: e.target.value})}
@@ -306,14 +307,14 @@ const Login = () => {
                                     </div>
                                 </div>
 
-                                <div className="relative group space-y-3">
+                                <div className="relative group space-y-2">
                                     <div className="flex items-center justify-between gap-3">
                                         <label className="block text-[11px] font-black text-white/70 uppercase tracking-widest ml-1">{t.email}</label>
                                         <button
                                             type="button"
                                             onClick={handleSendOtp}
                                             disabled={otpSending || !registerData.email || !registerData.username}
-                                            className="px-3 py-2 text-[11px] font-black rounded-xl bg-emerald-400 text-[#0A1613] hover:bg-emerald-300 transition-all disabled:opacity-50"
+                                            className="px-3 py-1.5 text-[10px] font-black rounded-lg bg-emerald-400 text-[#0A1613] hover:bg-emerald-300 transition-all disabled:opacity-50"
                                         >
                                             {otpSending ? 'Sending...' : 'Send OTP'}
                                         </button>
@@ -321,22 +322,22 @@ const Login = () => {
                                     <input
                                         type="email"
                                         required
-                                        className="w-full bg-emerald-50/5 border border-emerald-200/30 text-emerald-50 p-4 rounded-2xl focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-300/60 outline-none transition-all placeholder:text-emerald-100/40 font-semibold"
+                                        className="w-full bg-emerald-50/5 border border-emerald-200/30 text-emerald-50 p-3 rounded-2xl focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-300/60 outline-none transition-all placeholder:text-emerald-100/40 font-semibold"
                                         placeholder="you@campus.edu"
                                         value={registerData.email}
                                         onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
                                     />
-                                    {otpStatus && <p className="text-[11px] text-emerald-200 font-semibold ml-1">{otpStatus}</p>}
+                                    {otpStatus && <p className="text-[10px] text-emerald-200 font-semibold ml-1">{otpStatus}</p>}
                                 </div>
 
                                 <div className="relative group">
-                                    <label className="block text-[11px] font-black text-white/70 uppercase tracking-widest mb-3 ml-1">{t.securePin}</label>
+                                    <label className="block text-[11px] font-black text-white/70 uppercase tracking-widest mb-2 ml-1">{t.securePin}</label>
                                     <div className="relative">
-                                        <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-[#F4D035] transition-colors" size={22} />
+                                        <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-[#F4D035] transition-colors" size={20} />
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             required
-                                            className="w-full bg-emerald-50/5 border border-emerald-200/30 text-emerald-50 p-4 pl-14 pr-14 rounded-2xl focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-300/60 outline-none transition-all placeholder:text-emerald-100/40 font-semibold"
+                                            className="w-full bg-emerald-50/5 border border-emerald-200/30 text-emerald-50 p-3 pl-12 pr-12 rounded-2xl focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-300/60 outline-none transition-all placeholder:text-emerald-100/40 font-semibold"
                                             placeholder="••••••••"
                                             value={registerData.password}
                                             onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
@@ -351,18 +352,18 @@ const Login = () => {
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     <label className="block text-[11px] font-black text-white/70 uppercase tracking-widest ml-1">{t.selectRole}</label>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                         {roles.map((role) => (
                                             <button
                                                 type="button"
                                                 key={role.id}
                                                 onClick={() => setRegisterData({ ...registerData, role: role.id })}
-                                                className={`p-4 rounded-2xl border text-left bg-white/5 backdrop-blur-sm transition-all hover:border-emerald-300/60 hover:-translate-y-1 ${registerData.role === role.id ? 'border-emerald-300/80 ring-2 ring-emerald-400/30' : 'border-white/10'}`}
+                                                className={`p-3 rounded-xl border text-left bg-white/5 backdrop-blur-sm transition-all hover:border-emerald-300/60 ${registerData.role === role.id ? 'border-emerald-300/80 ring-2 ring-emerald-400/30' : 'border-white/10'}`}
                                             >
-                                                <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${role.accent} flex items-center justify-center text-xl mb-3 shadow-lg`}>{role.icon}</div>
-                                                <p className="text-white font-bold text-lg">{role.label}</p>
+                                                <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${role.accent} flex items-center justify-center text-lg mb-2 shadow-lg`}>{role.icon}</div>
+                                                <p className="text-white font-bold text-sm">{role.label}</p>
                                                 <p className="text-white/60 text-xs">{role.desc}</p>
                                             </button>
                                         ))}
@@ -370,51 +371,51 @@ const Login = () => {
                                     <p className="text-[10px] text-white/70 font-bold ml-1">All roles visible by default. Pick one to unlock the right dashboard.</p>
                                 </div>
 
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <label className="block text-[11px] font-black text-white/70 uppercase tracking-widest ml-1">Department / Block</label>
                                         <span className="text-[10px] text-white/60">Tap to select</span>
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-1">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
                                         {locations.map((loc) => (
                                             <button
                                                 type="button"
                                                 key={loc.id}
-                                                onClick={() => setRegisterData({ ...registerData, location_id: loc.id })}
-                                                className={`w-full text-left p-4 rounded-2xl border bg-white/5 backdrop-blur-sm transition-all hover:border-emerald-300/60 hover:-translate-y-0.5 ${registerData.location_id === String(loc.id) ? 'border-emerald-300/80 ring-2 ring-emerald-400/30 text-emerald-50' : 'border-white/10 text-white/80'}`}
+                                                onClick={() => setRegisterData({ ...registerData, department_id: String(loc.id), location_id: String(loc.id) })}
+                                                className={`w-full text-left p-2.5 rounded-xl border bg-white/5 backdrop-blur-sm transition-all hover:border-emerald-300/60 ${registerData.department_id === String(loc.id) ? 'border-emerald-300/80 ring-2 ring-emerald-400/30 text-emerald-50' : 'border-white/10 text-white/80'}`}
                                             >
-                                                <p className="font-bold text-white">{loc.name}</p>
-                                                {loc.type && <p className="text-[11px] text-white/60 uppercase tracking-widest">{loc.type}</p>}
+                                                <p className="font-bold text-white text-sm">{loc.name}</p>
+                                                {loc.code && <p className="text-[10px] text-white/60 uppercase tracking-widest">{loc.code}</p>}
                                             </button>
                                         ))}
                                     </div>
-                                    <p className="mt-1 text-[10px] text-white/70 font-bold ml-1">Visible campus blocks—no hidden dropdowns.</p>
+                                    <p className="mt-1 text-[9px] text-white/70 font-bold ml-1">Visible campus blocks—no hidden dropdowns.</p>
                                 </div>
 
                                 <div className="relative group">
-                                    <label className="block text-[11px] font-black text-white/70 uppercase tracking-widest mb-3 ml-1">One-Time Passcode</label>
+                                    <label className="block text-[11px] font-black text-white/70 uppercase tracking-widest mb-2 ml-1">One-Time Passcode</label>
                                     <input
                                         type="text"
                                         inputMode="numeric"
                                         pattern="[0-9]*"
                                         required
-                                        className="w-full bg-emerald-50/5 border border-emerald-200/30 text-emerald-50 p-4 rounded-2xl focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-300/60 outline-none transition-all placeholder:text-emerald-100/40 font-semibold"
+                                        className="w-full bg-emerald-50/5 border border-emerald-200/30 text-emerald-50 p-3 rounded-2xl focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-300/60 outline-none transition-all placeholder:text-emerald-100/40 font-semibold"
                                         placeholder="Enter 6-digit code"
                                         value={otp}
                                         onChange={(e) => setOtp(e.target.value)}
                                     />
-                                    {otpVerified && <p className="mt-2 text-[11px] text-emerald-200 font-semibold ml-1">OTP verified and account ready.</p>}
+                                    {otpVerified && <p className="mt-1 text-[10px] text-emerald-200 font-semibold ml-1">✓ OTP verified</p>}
                                 </div>
                             </div>
 
                             {error && (
-                                <div className="p-4 bg-red-500/15 border border-red-400/30 text-red-100 text-[11px] font-black uppercase tracking-widest rounded-xl text-center backdrop-blur-sm">
+                                <div className="p-3 bg-red-500/15 border border-red-400/30 text-red-100 text-[10px] font-black uppercase tracking-widest rounded-xl text-center backdrop-blur-sm">
                                     {error}
                                 </div>
                             )}
 
                             {registerSuccess && (
-                                <div className="p-4 bg-emerald-500/20 border border-emerald-400/40 text-emerald-50 text-[11px] font-black uppercase tracking-widest rounded-xl text-center backdrop-blur-sm">
+                                <div className="p-3 bg-emerald-500/15 border border-emerald-400/30 text-emerald-100 text-[10px] font-black uppercase tracking-widest rounded-xl text-center backdrop-blur-sm">
                                     {registerSuccess}
                                 </div>
                             )}
@@ -422,7 +423,7 @@ const Login = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-6 bg-gradient-to-r from-[#F4D035] to-[#44B0E0] hover:from-[#FFE84D] hover:to-[#5BC8FF] text-[#001F3F] font-black rounded-2xl transition-all shadow-2xl shadow-[#F4D035]/50 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95 group uppercase tracking-wider text-sm font-bold"
+                                className="w-full py-5 bg-gradient-to-r from-[#F4D035] to-[#44B0E0] hover:from-[#FFE84D] hover:to-[#5BC8FF] text-white font-black rounded-2xl transition-all shadow-2xl shadow-[#F4D035]/50 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95 group uppercase tracking-wider text-sm font-bold"
                             >
                                 {loading ? <Loader2 className="animate-spin" size={20} /> : (
                                     <>
@@ -432,8 +433,12 @@ const Login = () => {
                                 )}
                             </button>
 
-                            <div className="text-center pt-6 border-t border-white/20">
-                                <p className="text-white/70 text-sm"><button type="button" onClick={() => setIsRegister(false)} className="text-[#F4D035] font-bold hover:text-[#FFE84D] transition-colors">{t.backToLogin}</button></p>
+                            <div className="text-center pt-4 border-t border-white/20">
+                                <p className="text-white/70 text-xs">
+                                    <button type="button" onClick={() => setIsRegister(false)} className="text-[#F4D035] font-bold hover:text-[#FFE84D] transition-colors">
+                                        {t.backToLogin}
+                                    </button>
+                                </p>
                             </div>
                         </form>
                     )}

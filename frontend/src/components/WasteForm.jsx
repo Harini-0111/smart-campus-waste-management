@@ -7,7 +7,7 @@ import { useNotification } from './NotificationSystem';
 const WasteForm = ({ onEntryAdded }) => {
     const { notify } = useNotification();
     const [locations, setLocations] = useState([]);
-    const [formData, setFormData] = useState({ location_id: '', waste_type: 'Dry', quantity_kg: '', image_url: '', description: '' });
+    const [formData, setFormData] = useState({ department_id: '', waste_type: 'Dry', quantity_kg: '', image_url: '', description: '' });
     const [loading, setLoading] = useState(false);
     const [preview, setPreview] = useState(null);
     const [file, setFile] = useState(null);
@@ -90,7 +90,10 @@ const WasteForm = ({ onEntryAdded }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.location_id) return;
+        if (!formData.department_id || !formData.waste_type || !formData.quantity_kg) {
+            notify("Department, waste type, and quantity are required.", "critical");
+            return;
+        }
 
         setLoading(true);
         try {
@@ -106,19 +109,22 @@ const WasteForm = ({ onEntryAdded }) => {
                 finalImageUrl = uploadRes.data.imageUrl;
             }
 
-            await axios.post(`${API_URL}/waste`, { ...formData, image_url: finalImageUrl }, {
-                headers
-            });
+            const res = await axios.post(`${API_URL}/waste`, { ...formData, image_url: finalImageUrl }, { headers });
 
-            notify("Collection Protocol Successfully Recorded", "success");
-            setFormData({ location_id: '', waste_type: 'Dry', quantity_kg: '', image_url: '', description: '' });
-            setPreview(null);
-            setFile(null);
-            setSuggestedType(null);
-            if (onEntryAdded) onEntryAdded();
+            if (res.status >= 200 && res.status < 300) {
+                notify("Collection Protocol Successfully Recorded", "success");
+                setFormData({ department_id: '', waste_type: 'Dry', quantity_kg: '', image_url: '', description: '' });
+                setPreview(null);
+                setFile(null);
+                setSuggestedType(null);
+                if (onEntryAdded) onEntryAdded();
+            } else {
+                throw new Error('Submission failed. Please try again.');
+            }
         } catch (error) {
             console.error('Error submitting form:', error);
-            notify("Submission Failed. Check telemetry logs.", "critical");
+            const serverMsg = error.response?.data?.error || error.message || 'Submission failed. Please try again.';
+            notify(serverMsg, "critical");
         } finally {
             setLoading(false);
         }
@@ -131,7 +137,7 @@ const WasteForm = ({ onEntryAdded }) => {
     };
 
     return (
-        <div className="max-w-5xl mx-auto animate-slideUp px-4 sm:px-0">
+        <div className="max-w-5xl mx-auto animate-slideUp px-4 sm:px-0 pb-10">
             <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-200 overflow-hidden ring-1 ring-slate-900/5" style={cardStyle}>
                 <div className="px-10 py-8 border-b border-slate-100/70 bg-white/80 backdrop-blur-sm flex justify-between items-center">
                     <div>
@@ -143,7 +149,7 @@ const WasteForm = ({ onEntryAdded }) => {
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-10 space-y-8">
+                <form onSubmit={handleSubmit} className="p-10 space-y-8 max-h-[75vh] overflow-y-auto">
                     {/* Location */}
                     <div className="space-y-3">
                         <label className="block text-[12px] font-black text-slate-600 uppercase tracking-widest ml-1">Department / Block <span className="text-red-500">*</span></label>
@@ -151,8 +157,8 @@ const WasteForm = ({ onEntryAdded }) => {
                             <select
                                 required
                                 className="w-full pl-6 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none appearance-none transition-all text-slate-800 font-bold hover:bg-white"
-                                value={formData.location_id}
-                                onChange={(e) => setFormData({ ...formData, location_id: e.target.value })}
+                                value={formData.department_id}
+                                onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
                             >
                                 <option value="">Select department / block...</option>
                                 {locations.map(loc => (

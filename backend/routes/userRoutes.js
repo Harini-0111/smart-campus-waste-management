@@ -23,19 +23,19 @@ router.get('/me/stats', authenticateToken, async (req, res) => {
 
         // Get total waste logged by this user
         const totalResult = await db.query(
-            'SELECT COALESCE(SUM(quantity_kg), 0) as total_waste FROM waste_logs WHERE id = $1',
+            'SELECT COALESCE(SUM(quantity_kg), 0) as total_waste FROM waste_logs WHERE student_id = $1',
             [userId]
         );
 
         // Get breakdown by type
         const byTypeResult = await db.query(
-            'SELECT waste_type, COALESCE(SUM(quantity_kg), 0) as total FROM waste_logs WHERE id = $1 GROUP BY waste_type',
+            'SELECT waste_type, COALESCE(SUM(quantity_kg), 0) as total FROM waste_logs WHERE student_id = $1 GROUP BY waste_type',
             [userId]
         );
 
         // Get total entries count
         const countResult = await db.query(
-            'SELECT COUNT(*) as total_logs FROM waste_logs WHERE id = $1',
+            'SELECT COUNT(*) as total_logs FROM waste_logs WHERE student_id = $1',
             [userId]
         );
 

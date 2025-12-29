@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
-import { CheckCircle2, UserPlus, Search, AlertCircle, Clock } from 'lucide-react';
+import { CheckCircle2, UserPlus, Search, AlertCircle, Clock, RefreshCcw, Bell } from 'lucide-react';
 import { TableSkeleton } from './SkeletonLoader';
 import { useNotification } from './NotificationSystem';
 
@@ -16,13 +16,12 @@ const AdminTaskManager = () => {
         try {
             const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
             const [reportsRes, staffRes] = await Promise.all([
-                axios.get(`${API_URL}/waste`, { headers }), // Fetching for assignment
-                axios.get(`${API_URL}/users/staff`, { headers }) // Endpoint needs to be verified/added
+                axios.get(`${API_URL}/tasks/unassigned`, { headers }),
+                axios.get(`${API_URL}/users/staff`, { headers })
             ]);
 
-            // Filter only unassigned/Reported waste logs
-            setReports(reportsRes.data.filter(r => r.status === 'Reported' || !r.status));
-            setStaff(staffRes.data);
+            setReports(reportsRes.data || []);
+            setStaff(staffRes.data || []);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching admin task data:', error);
@@ -32,16 +31,18 @@ const AdminTaskManager = () => {
 
     useEffect(() => {
         fetchData();
+        const interval = setInterval(fetchData, 20000);
+        return () => clearInterval(interval);
     }, []);
 
     const handleAssign = async (logId, staffId) => {
         try {
             setAssigning(logId);
-            await axios.post(`${API_URL}/tasks`,
-                { waste_log_id: logId, assigned_to: staffId },
+            await axios.post(`${API_URL}/tasks/assign`,
+                { waste_log_id: logId, staff_id: staffId, priority: 'Normal' },
                 { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
             );
-            notify("Deployment Directive Dispatched Successfully", "success");
+            notify("Deployment Directive dispatched", "success");
             fetchData();
             setAssigning(null);
         } catch (error) {
@@ -54,24 +55,34 @@ const AdminTaskManager = () => {
 
     return (
         <div className="space-y-8 animate-fadeIn">
-            <div className="flex justify-between items-end mb-4">
+            <div className="flex justify-between items-center mb-4 gap-3">
                 <div>
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Operational Directives</h2>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Assign pending collection reports to available staff</p>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Operational Directives</h2>
+                        <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 border border-amber-200 flex items-center gap-1">
+                            <Bell size={14} /> {reports.length} new
+                        </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Assign pending collection reports to available staff</p>
                 </div>
-                <div className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-2xl border border-emerald-100 text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                    <UserPlus size={16} /> {staff.length} Active Staff
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchData} className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 text-[11px] font-black uppercase tracking-widest flex items-center gap-2 hover:border-slate-300">
+                        <RefreshCcw size={14} /> Refresh
+                    </button>
+                    <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-2xl border border-emerald-100 text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                        <UserPlus size={16} /> {staff.length} Staff
+                    </div>
                 </div>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden overflow-x-auto">
+            <div className="bg-white rounded-[2.5rem] border border-slate-200/80 shadow-md overflow-hidden overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-slate-50/50 border-b border-slate-100">
                             <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Location</th>
                             <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Waste Type</th>
                             <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Weight</th>
-                            <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Captured At</th>
+                            <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Reported</th>
                             <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
                         </tr>
                     </thead>
@@ -80,8 +91,8 @@ const AdminTaskManager = () => {
                             <tr key={report.id} className="hover:bg-slate-50/50 transition-colors group">
                                 <td className="px-8 py-6">
                                     <div className="flex flex-col">
-                                        <span className="font-black text-slate-800 tracking-tight">{report.location_name}</span>
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase">Block Area</span>
+                                        <span className="font-black text-slate-800 tracking-tight">{report.department_name || report.location_description || 'Department'}</span>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase">Reported by {report.student_name || 'student'}</span>
                                     </div>
                                 </td>
                                 <td className="px-8 py-6">
@@ -96,7 +107,7 @@ const AdminTaskManager = () => {
                                 </td>
                                 <td className="px-8 py-6 text-slate-500 font-bold text-xs">
                                     <div className="flex items-center gap-1.5 uppercase tracking-tighter">
-                                        <Clock size={12} /> {new Date(report.collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        <Clock size={12} /> {report.reported_at ? new Date(report.reported_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
                                     </div>
                                 </td>
                                 <td className="px-8 py-6 text-right">

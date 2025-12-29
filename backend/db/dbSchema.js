@@ -27,7 +27,8 @@ async function initializeSchema() {
         await db.query(`
             CREATE TABLE email_verifications (
                 id SERIAL PRIMARY KEY,
-                email VARCHAR(100) NOT NULL,
+                email VARCHAR(100) NOT NULL UNIQUE,
+                username VARCHAR(50),
                 otp VARCHAR(6) NOT NULL,
                 expires_at TIMESTAMP NOT NULL,
                 verified BOOLEAN DEFAULT false,
@@ -55,11 +56,9 @@ async function initializeSchema() {
                 username VARCHAR(50) UNIQUE NOT NULL,
                 email VARCHAR(100) UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
-                full_name VARCHAR(100) NOT NULL,
-                registration_number VARCHAR(50) UNIQUE NOT NULL,
-                role VARCHAR(20) NOT NULL CHECK (role IN ('student', 'admin', 'staff')),
+                role VARCHAR(20) NOT NULL CHECK (role IN ('student', 'admin', 'staff', 'block_admin')),
+                location_id INTEGER REFERENCES departments(id),
                 department_id INTEGER REFERENCES departments(id),
-                phone VARCHAR(15),
                 is_active BOOLEAN DEFAULT true,
                 email_verified BOOLEAN DEFAULT false,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

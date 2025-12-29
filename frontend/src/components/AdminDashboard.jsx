@@ -3,17 +3,20 @@ import axios from 'axios';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
     TrendingUp, TrendingDown, AlertTriangle, Leaf, Clock, ArrowRight,
-    BarChart3, Activity, CheckCircle2, MoreHorizontal, Image as ImageIcon
+    BarChart3, Activity, CheckCircle2, MoreHorizontal, Image as ImageIcon,
+    LayoutGrid, PlusSquare, Activity as ActivityIcon, History as HistoryIcon
 } from 'lucide-react';
 import { API_URL } from '../config';
 import { DashboardSkeleton } from './SkeletonLoader';
 import { useNotification } from './NotificationSystem';
 
-const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
+const AdminDashboard = ({ refreshTrigger, onViewHistory, onViewTasks, onLogWaste }) => {
     const { notify } = useNotification();
     const [data, setData] = useState({ total_today: 0, by_type: [], by_location: [], recent: [] });
     const [predictions, setPredictions] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [newReports, setNewReports] = useState(0);
+    const [activeTasks, setActiveTasks] = useState(0);
 
     // Simulated metrics
     const segregationScore = 94;
@@ -24,13 +27,18 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
     const fetchData = async () => {
         try {
             const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-            const [dashboardRes, predictionRes] = await Promise.all([
+            const [dashboardRes, predictionRes, newCountRes, tasksRes] = await Promise.all([
                 axios.get(`${API_URL}/dashboard`, { headers }),
-                axios.get(`${API_URL}/analytics/prediction`, { headers })
+                axios.get(`${API_URL}/analytics/prediction`, { headers }),
+                axios.get(`${API_URL}/tasks/new-reports-count`, { headers }),
+                axios.get(`${API_URL}/tasks/all`, { headers })
             ]);
 
             setData(dashboardRes.data);
             setPredictions(predictionRes.data);
+            setNewReports(newCountRes.data?.count ?? 0);
+            const tasks = tasksRes.data || [];
+            setActiveTasks(tasks.filter(t => t.status !== 'Completed').length);
 
             // Critical Alerts Logic
             const hasHazardous = dashboardRes.data.recent.some(r => r.waste_type === 'Hazardous');
@@ -51,6 +59,8 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
     useEffect(() => {
         setLoading(true);
         fetchData();
+        const interval = setInterval(fetchData, 20000);
+        return () => clearInterval(interval);
     }, [refreshTrigger]);
 
     const COLORS = {
@@ -70,28 +80,49 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
     return (
         <div className="space-y-6 pb-12 animate-fadeIn text-slate-800">
 
-            {/* Top Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Layout with optional Sidebar */}
+            <div className="grid grid-cols-1 lg:grid-cols-[220px,1fr] gap-8">
+                {/* Sidebar */}
+                <aside className="hidden lg:block bg-white rounded-2xl border border-slate-200 shadow-sm h-fit sticky top-28">
+                    <nav className="p-4 space-y-1">
+                        <SideLink icon={LayoutGrid} label="Insights" active />
+                        <SideLink icon={ActivityIcon} label="Directives" onClick={onViewTasks} />
+                        <SideLink icon={PlusSquare} label="Log Waste" onClick={onLogWaste} />
+                        <SideLink icon={HistoryIcon} label="History" onClick={onViewHistory} />
+                    </nav>
+                </aside>
+
+                <div className="space-y-6">
+                    {/* Quick Metrics Bar */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <MetricCard title="Total Today" value={`${Number(data.total_today).toFixed(1)} kg`} color="emerald" />
+                        <MetricCard title="New Reports" value={newReports} color="amber" onClick={onViewTasks} cta="Assign" />
+                        <MetricCard title="Active Tasks" value={activeTasks} color="blue" />
+                        <MetricCard title="Risk" value={predictions ? predictions.risk.level.toUpperCase() : '--'} color={predictions?.risk.level === 'critical' ? 'red' : 'slate'} />
+                    </div>
+
+                    {/* Top Stats Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 {/* Total Waste Card */}
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded w-fit mb-2">Total Generated</p>
-                            <h3 className="text-4xl font-black text-slate-900 tracking-tight">{Number(data.total_today).toFixed(1)} <span className="text-lg font-bold text-slate-400">kg</span></h3>
+                            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mb-2">Total Generated</p>
+                            <h3 className="text-4xl font-bold text-slate-900 tracking-tight">{Number(data.total_today).toFixed(1)} <span className="text-lg font-normal text-slate-500">kg</span></h3>
                         </div>
                         <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-inner">
                             <Activity size={24} />
                         </div>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-3">Live Waste Tracking — real-time campus reports</p>
+                    <p className="text-xs text-slate-500 font-normal mt-3">Live campus waste tracking</p>
                 </div>
 
                 {/* Segregation Score */}
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded w-fit mb-2">Efficiency</p>
-                            <h3 className="text-4xl font-black text-slate-900 tracking-tight">{segregationScore}%</h3>
+                            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mb-2">Efficiency</p>
+                            <h3 className="text-4xl font-bold text-slate-900 tracking-tight">{segregationScore}%</h3>
                         </div>
                         <div className="p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
                             <CheckCircle2 size={24} />
@@ -100,7 +131,7 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                     <div className="mt-4 w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-50">
                         <div className="bg-gradient-to-r from-blue-400 to-indigo-500 h-full rounded-full transition-all duration-1000" style={{ width: `${segregationScore}%` }}></div>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-3">Segregation quality based on category accuracy</p>
+                    <p className="text-xs text-slate-500 font-normal mt-3">Segregation quality score</p>
                 </div>
 
                 {/* ML Forecast Card with Tooltip */}
@@ -108,18 +139,18 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                     <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 -mr-12 -mt-12 rounded-full transform group-hover:scale-150 transition-transform duration-700"></div>
                     <div className="flex justify-between items-start relative z-10">
                         <div>
-                            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded w-fit mb-2 flex items-center gap-1">
-                                <Activity size={12} /> Predictive Load
+                            <p className="text-[10px] font-medium text-indigo-400 uppercase tracking-widest mb-2">
+                                Predictive Load
                             </p>
-                            <h3 className="text-4xl font-black text-indigo-900 tracking-tight">
-                                {predictions ? `${predictions.prediction.prediction}` : '--'} <span className="text-lg font-bold text-indigo-300">kg</span>
+                            <h3 className="text-4xl font-bold text-indigo-900 tracking-tight">
+                                {predictions ? `${predictions.prediction.prediction}` : '--'} <span className="text-lg font-normal text-indigo-400">kg</span>
                             </h3>
                         </div>
-                        <div className="p-3 bg-indigo-600 text-white rounded-xl shadow-lg animate-pulse-slow">
+                        <div className="p-3 bg-indigo-600 text-white rounded-xl shadow-lg">
                             <TrendingUp size={24} />
                         </div>
                     </div>
-                    <p className="text-[10px] font-bold text-indigo-400 mt-3 uppercase tracking-tighter">AI Predictions — smart estimation of daily waste load</p>
+                    <p className="text-xs text-indigo-500 font-normal mt-3">AI forecast for tomorrow</p>
                 </div>
 
                 {/* Risk Card */}
@@ -129,11 +160,11 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                     }`}>
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className={`text-xs font-bold uppercase tracking-widest px-2 py-1 rounded w-fit mb-2 ${predictions?.risk.level === 'critical' || predictions?.risk.level === 'high' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'
+                            <p className={`text-[10px] font-medium uppercase tracking-widest mb-2 ${predictions?.risk.level === 'critical' || predictions?.risk.level === 'high' ? 'text-red-500' : 'text-emerald-500'
                                 }`}>Overflow Risk</p>
-                            <h3 className={`text-3xl font-black tracking-tight ${predictions?.risk.level === 'critical' || predictions?.risk.level === 'high' ? 'text-red-900' : 'text-emerald-900'
+                            <h3 className={`text-3xl font-bold tracking-tight capitalize ${predictions?.risk.level === 'critical' || predictions?.risk.level === 'high' ? 'text-red-900' : 'text-emerald-900'
                                 }`}>
-                                {predictions ? predictions.risk.level.toUpperCase() : 'ANALYZING...'}
+                                {predictions ? predictions.risk.level : 'Analyzing'}
                             </h3>
                         </div>
                         <div className={`p-3 rounded-xl shadow-sm ${predictions?.risk.level === 'critical' || predictions?.risk.level === 'high' ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'
@@ -141,7 +172,29 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                             <AlertTriangle size={24} />
                         </div>
                     </div>
-                    <p className="text-[10px] text-slate-500 font-semibold mt-3">AI-assisted risk assessment for potential overflow</p>
+                    <p className="text-xs text-slate-500 font-normal mt-3">Risk assessment</p>
+                </div>
+
+                {/* New Reports Card */}
+                <div className="bg-white p-6 rounded-2xl border border-amber-200/60 shadow-sm hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+                    <div className="absolute -right-10 -top-10 w-28 h-28 bg-amber-100 rounded-full group-hover:scale-125 transition-transform"></div>
+                    <div className="flex justify-between items-start relative z-10">
+                        <div>
+                            <p className="text-[10px] font-medium text-amber-600 uppercase tracking-widest mb-2">
+                                New Reports
+                            </p>
+                            <h3 className="text-4xl font-bold text-slate-900 tracking-tight">{newReports}</h3>
+                        </div>
+                        <div className="p-3 bg-amber-500 text-white rounded-xl shadow-inner">
+                            <AlertTriangle size={24} />
+                        </div>
+                    </div>
+                    <p className="text-xs text-amber-600 font-normal mt-3">Awaiting assignment</p>
+                    <div className="mt-4">
+                        <button onClick={() => onViewTasks && onViewTasks()} className="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition-colors">
+                            Assign Now
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -282,9 +335,36 @@ const AdminDashboard = ({ refreshTrigger, onViewHistory }) => {
                         Historical Audits <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
 };
 
 export default AdminDashboard;
+
+// Helpers
+const MetricCard = ({ title, value, color = 'slate', cta, onClick }) => (
+    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+        <div className="mt-2.5 flex items-end justify-between gap-3">
+            <h3 className="text-2xl leading-snug font-extrabold text-slate-900">{value}</h3>
+            {cta && (
+                <button onClick={onClick} className="px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold uppercase tracking-wide hover:bg-slate-800">
+                    {cta}
+                </button>
+            )}
+        </div>
+    </div>
+);
+
+const SideLink = ({ icon: Icon, label, active, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[13px] font-bold tracking-tight ${active ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-50'}`}
+    >
+        <Icon size={18} />
+        <span className="truncate">{label}</span>
+    </button>
+);

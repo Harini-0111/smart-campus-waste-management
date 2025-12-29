@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import WasteForm from './components/WasteForm';
 import AdminDashboard from './components/AdminDashboard';
+import AdminTaskManager from './components/AdminTaskManager';
 import StaffDashboard from './components/StaffDashboard';
 import UserDashboard from './components/UserDashboard';
 import Analytics from './components/Analytics';
@@ -86,7 +87,7 @@ function AppContent() {
             <UserDashboard />
           ) : (
             <>
-              {activeTab === 'dashboard' && <AdminDashboard refreshTrigger={refreshTrigger} onViewHistory={() => setActiveTab('history')} />}
+              {activeTab === 'dashboard' && <AdminDashboard refreshTrigger={refreshTrigger} onViewHistory={() => setActiveTab('history')} onViewTasks={() => setActiveTab('tasks')} onLogWaste={() => setActiveTab('entry')} />}
               {activeTab === 'entry' && <WasteForm onEntryAdded={handleEntryAdded} />}
               {activeTab === 'tasks' && <AdminTaskManager />}
               {activeTab === 'history' && <History />}
@@ -102,8 +103,8 @@ function AppContent() {
 const NavButton = ({ active, onClick, icon: Icon, label }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-2.5 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300
-        ${active ? 'bg-white text-slate-900 shadow-md transform -translate-y-0.5' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 opacity-70 hover:opacity-100'}`}
+    className={`flex items-center gap-2.5 px-6 py-3 rounded-xl text-[12px] font-black uppercase tracking-wide transition-all duration-300
+        ${active ? 'bg-white text-slate-900 shadow-md transform -translate-y-0.5' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 opacity-90 hover:opacity-100'}`}
   >
     <Icon size={16} className={active ? 'text-emerald-500' : 'text-slate-400'} />
     {label}
