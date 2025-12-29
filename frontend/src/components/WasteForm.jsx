@@ -31,6 +31,7 @@ const WasteForm = ({ onEntryAdded }) => {
         return null;
     };
 
+
     useEffect(() => {
         axios.get(`${API_URL}/locations`)
             .then(res => setLocations(res.data))
@@ -123,23 +124,29 @@ const WasteForm = ({ onEntryAdded }) => {
         }
     };
 
+    const cardStyle = {
+        backgroundImage: "linear-gradient(120deg, rgba(16,32,27,0.05), rgba(16,32,27,0.08)), url('https://cdn.pixabay.com/photo/2017/09/08/18/59/recycle-2729345_1280.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'right center'
+    };
+
     return (
-        <div className="max-w-xl mx-auto animate-slideUp px-4 sm:px-0">
-            <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-200 overflow-hidden ring-1 ring-slate-900/5">
-                <div className="px-10 py-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+        <div className="max-w-5xl mx-auto animate-slideUp px-4 sm:px-0">
+            <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-200 overflow-hidden ring-1 ring-slate-900/5" style={cardStyle}>
+                <div className="px-10 py-8 border-b border-slate-100/70 bg-white/80 backdrop-blur-sm flex justify-between items-center">
                     <div>
-                        <h2 className="font-black text-2xl text-slate-900 tracking-tight">Log Directive</h2>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Operational Entry Gateway</p>
+                        <h2 className="font-black text-3xl text-slate-900 tracking-tight">Log Directive</h2>
+                        <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mt-1">Operational Entry Gateway</p>
                     </div>
-                    <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-emerald-500">
-                        <Package size={24} />
+                    <div className="bg-white/80 p-3 rounded-2xl border border-slate-200 shadow-sm text-emerald-500">
+                        <Package size={26} />
                     </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-10 space-y-8">
                     {/* Location */}
                     <div className="space-y-3">
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vector Node <span className="text-red-500">*</span></label>
+                        <label className="block text-[12px] font-black text-slate-600 uppercase tracking-widest ml-1">Department / Block <span className="text-red-500">*</span></label>
                         <div className="relative group">
                             <select
                                 required
@@ -147,38 +154,43 @@ const WasteForm = ({ onEntryAdded }) => {
                                 value={formData.location_id}
                                 onChange={(e) => setFormData({ ...formData, location_id: e.target.value })}
                             >
-                                <option value="">Select deployment sector...</option>
+                                <option value="">Select department / block...</option>
                                 {locations.map(loc => (
                                     <option key={loc.id} value={loc.id}>{loc.name}</option>
                                 ))}
                             </select>
                             <ChevronDown className="absolute right-6 top-5 text-slate-400 pointer-events-none group-hover:text-slate-600 transition-colors" size={18} />
                         </div>
-                        <p className="text-[10px] text-slate-500 font-semibold ml-1">Choose the closest collection point for accuracy.</p>
+                        <p className="text-[11px] text-slate-600 font-semibold ml-1">Choose the closest campus department/block for accuracy.</p>
                     </div>
 
                     {/* Waste Type */}
                     <div className="space-y-3">
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Waste Classification <span className="text-red-500">*</span></label>
+                        <label className="block text-[12px] font-black text-slate-600 uppercase tracking-widest ml-1">Waste Classification <span className="text-red-500">*</span></label>
                         <div className="grid grid-cols-2 gap-4">
                             {wasteTypes.map(type => (
                                 <div
                                     key={type.id}
                                     onClick={() => setFormData({ ...formData, waste_type: type.id })}
-                                    className={`cursor-pointer p-5 rounded-2xl border transition-all flex items-center gap-4 hover:shadow-xl ${formData.waste_type === type.id
-                                        ? 'border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20'
+                                    className={`cursor-pointer p-4 rounded-2xl border transition-all flex gap-4 hover:shadow-xl overflow-hidden relative ${formData.waste_type === type.id
+                                        ? 'border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/20'
                                         : 'border-slate-100 hover:border-slate-200 bg-white'
                                         }`}
                                 >
-                                    <div className={`w-4 h-4 rounded-full ${type.color} shadow-lg`} />
-                                    <div>
-                                        <h3 className={`text-sm font-black tracking-tight ${formData.waste_type === type.id ? 'text-slate-900' : 'text-slate-500'}`}>{type.label}</h3>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter leading-none mt-1">{type.desc.split(',')[0]}</p>
+                                    <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-slate-100">
+                                        <img src={type.mockImg} alt={type.label} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <div className={`w-5 h-5 rounded-full ${type.color} shadow-lg`} />
+                                            <h3 className={`text-base font-black tracking-tight ${formData.waste_type === type.id ? 'text-slate-900' : 'text-slate-500'}`}>{type.label}</h3>
+                                        </div>
+                                        <p className="text-[11px] font-bold text-slate-500 leading-tight">{type.desc}</p>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                        <p className="text-[10px] text-slate-500 font-semibold ml-1">Tip: Pick the closest match. AI suggestions appear from your notes.</p>
+                        <p className="text-[11px] text-slate-600 font-semibold ml-1">Tip: Visual cues show examples; AI suggestions still adapt from your notes.</p>
                     </div>
 
                     {/* Quantity & Image Row */}
