@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 import { UserCircle, ArrowRight, Lock, Loader2, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 
 const Login = () => {
     const { login } = useAuth();
@@ -11,7 +13,9 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [isRegister, setIsRegister] = useState(false);
     const [language, setLanguage] = useState('en');
-    const [registerData, setRegisterData] = useState({ username: '', email: '', password: '', role: 'student' });
+    const [registerData, setRegisterData] = useState({ username: '', email: '', password: '', role: 'student', location_id: '' });
+    const [locations, setLocations] = useState([]);
+    const [registerSuccess, setRegisterSuccess] = useState('');
 
     const translations = {
         en: {
@@ -92,14 +96,29 @@ const Login = () => {
         }
     };
 
+    useEffect(() => {
+        axios.get(`${API_URL}/locations`).then(res => setLocations(res.data || [])).catch(() => {});
+    }, []);
+
     const handleRegister = async (e) => {
         e.preventDefault();
         setError('');
+        setRegisterSuccess('');
         setLoading(true);
-        setTimeout(() => {
-            setError('Registration coming soon! Use demo credentials for now.');
+        try {
+            await axios.post(`${API_URL}/auth/register`, {
+                username: registerData.username,
+                password: registerData.password,
+                role: registerData.role,
+                location_id: registerData.location_id || null
+            });
+            setRegisterSuccess('Account created. Signing you in...');
+            await login(registerData.username, registerData.password);
+        } catch (err) {
+            setError(err.response?.data?.error || 'Registration failed. Please check details.');
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
     };
 
     const quickFillDemo = (user) => {
@@ -279,22 +298,47 @@ const Login = () => {
                                     </div>
                                 </div>
 
-                                <div className="relative group">
-                                    <label className="block text-[11px] font-black text-white/70 uppercase tracking-widest mb-3 ml-1">{t.selectRole}</label>
-                                    <select
-                                        value={registerData.role}
-                                        onChange={(e) => setRegisterData({...registerData, role: e.target.value})}
-                                        className="w-full bg-white/5 border border-white/20 text-white p-4 rounded-2xl focus:ring-4 focus:ring-[#F4D035]/30 focus:border-[#F4D035]/50 outline-none transition-all font-semibold appearance-none cursor-pointer"
-                                    >
-                                        <option value="student">Student</option>
-                                        <option value="staff">Cleaning Staff</option>
-                                    </select>
+                                <div className="relative group space-y-3">
+                                    <div>
+                                        <label className="block text-[11px] font-black text-white/70 uppercase tracking-widest mb-3 ml-1">{t.selectRole}</label>
+                                        <select
+                                            value={registerData.role}
+                                            onChange={(e) => setRegisterData({...registerData, role: e.target.value})}
+                                            className="w-full bg-white/5 border border-white/20 text-white p-4 rounded-2xl focus:ring-4 focus:ring-[#F4D035]/30 focus:border-[#F4D035]/50 outline-none transition-all font-semibold appearance-none cursor-pointer"
+                                        >
+                                            <option value="student">Student</option>
+                                            <option value="staff">Staff</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                        <p className="mt-2 text-[10px] text-white/60 font-bold ml-1">Assign the correct role for dashboard access</p>
+                                    </div>
+
+                                    <div className="relative">
+                                        <label className="block text-[11px] font-black text-white/70 uppercase tracking-widest mb-3 ml-1">Department / Block</label>
+                                        <select
+                                            value={registerData.location_id}
+                                            onChange={(e) => setRegisterData({...registerData, location_id: e.target.value})}
+                                            className="w-full bg-white/5 border border-white/20 text-white p-4 rounded-2xl focus:ring-4 focus:ring-[#F4D035]/30 focus:border-[#F4D035]/50 outline-none transition-all font-semibold appearance-none cursor-pointer"
+                                        >
+                                            <option value="">Select department / block...</option>
+                                            {locations.map((loc) => (
+                                                <option key={loc.id} value={loc.id}>{loc.name}</option>
+                                            ))}
+                                        </select>
+                                        <p className="mt-2 text-[10px] text-white/60 font-bold ml-1">Links your account to the correct campus zone</p>
+                                    </div>
                                 </div>
                             </div>
 
                             {error && (
                                 <div className="p-4 bg-red-500/20 border border-red-400/40 text-red-200 text-[11px] font-black uppercase tracking-widest rounded-xl text-center backdrop-blur-sm">
                                     {error}
+                                </div>
+                            )}
+
+                            {registerSuccess && (
+                                <div className="p-4 bg-emerald-500/20 border border-emerald-400/40 text-emerald-50 text-[11px] font-black uppercase tracking-widest rounded-xl text-center backdrop-blur-sm">
+                                    {registerSuccess}
                                 </div>
                             )}
 
